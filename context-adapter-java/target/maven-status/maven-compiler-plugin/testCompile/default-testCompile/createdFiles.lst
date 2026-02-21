@@ -1,0 +1,9 @@
+com/contextslice/adapter/SourceRootResolverTest.class
+com/contextslice/adapter/AdapterMainTest.class
+com/contextslice/adapter/IrMergerTest.class
+com/contextslice/adapter/ManifestReaderTest.class
+com/contextslice/adapter/IrSerializerTest.class
+com/contextslice/adapter/StaticAnalyzerTest.class
+com/contextslice/adapter/BuildRunnerTest.class
+com/contextslice/adapter/SymbolIdGeneratorTest.class
+com/contextslice/adapter/AnnotationProcessorTest.class

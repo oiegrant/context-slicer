@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.contextslice.adapter.AdapterMainTest
+-------------------------------------------------------------------------------
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.contextslice.adapter.AdapterMainTest

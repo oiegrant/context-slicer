@@ -1,0 +1,9 @@
+/Users/grantoie/Documents/Code/repos/context-slicer/context-adapter-java/src/test/java/com/contextslice/adapter/AdapterMainTest.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-adapter-java/src/test/java/com/contextslice/adapter/AnnotationProcessorTest.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-adapter-java/src/test/java/com/contextslice/adapter/BuildRunnerTest.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-adapter-java/src/test/java/com/contextslice/adapter/IrMergerTest.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-adapter-java/src/test/java/com/contextslice/adapter/IrSerializerTest.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-adapter-java/src/test/java/com/contextslice/adapter/ManifestReaderTest.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-adapter-java/src/test/java/com/contextslice/adapter/SourceRootResolverTest.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-adapter-java/src/test/java/com/contextslice/adapter/StaticAnalyzerTest.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-adapter-java/src/test/java/com/contextslice/adapter/SymbolIdGeneratorTest.java

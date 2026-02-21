@@ -1,0 +1,11 @@
+com/contextslice/agent/RuntimeTrace$ObservedEdge.class
+com/contextslice/agent/RuntimeTracer.class
+com/contextslice/agent/ShutdownHook.class
+com/contextslice/agent/MethodAdvice.class
+com/contextslice/agent/RuntimeTrace$ObservedSymbol.class
+com/contextslice/agent/RuntimeTrace$ConfigRead.class
+com/contextslice/agent/AgentBootstrap$AgentConfig.class
+com/contextslice/agent/RuntimeTrace.class
+com/contextslice/agent/RuntimeTracer$EdgeKey.class
+com/contextslice/agent/ConfigAdvice.class
+com/contextslice/agent/AgentBootstrap.class

@@ -1,0 +1,10 @@
+{
+  "scenario_name": "submit-order",
+  "entry_points": ["java::com.contextslice.fixture.OrderController::createOrder(OrderRequest)"],
+  "run_args": ["--server.port=18099"],
+  "config_files": ["application.yml"],
+  "output_dir": ".context-slice",
+  "namespace": "com.contextslice.fixture",
+  "server_port": 18099,
+  "run_script": "curl -s -X POST http://localhost:18099/orders -H 'Content-Type: application/json' -d '{\"customerId\":\"cust-001\",\"amount\":99.99,\"currency\":\"USD\"}'"
+}

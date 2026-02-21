@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+order:
+  payment:
+    provider: stripe
+
+spring:
+  application:
+    name: order-service

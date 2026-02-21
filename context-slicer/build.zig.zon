@@ -1,0 +1,8 @@
+.{
+    .name = .context_slicer,
+    .fingerprint = 0x7d644dd5aa489c2d,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.15.0",
+    .dependencies = .{},
+    .paths = .{"."},
+}

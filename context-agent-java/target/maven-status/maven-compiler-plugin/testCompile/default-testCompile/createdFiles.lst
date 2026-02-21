@@ -1,0 +1,3 @@
+com/contextslice/agent/AgentBootstrapTest.class
+com/contextslice/agent/ShutdownHookTest.class
+com/contextslice/agent/RuntimeTracerTest.class

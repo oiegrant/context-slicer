@@ -1,0 +1,30 @@
+{
+  "ir_version": "0.1",
+  "language": "java",
+  "repo_root": "/tmp/fixture",
+  "build_id": "test",
+  "adapter_version": "0.1.0",
+  "scenario": { "name": "test", "entry_points": [], "run_args": [], "config_files": [] },
+  "files": [
+    { "id": "f01", "path": "src/Foo.java", "language": "java", "hash": "sha256:abc" }
+  ],
+  "symbols": [
+    {
+      "id": "java::com.example.Foo",
+      "kind": "class", "name": "Foo", "language": "java",
+      "file_id": "f01", "line_start": 1, "line_end": 10,
+      "visibility": "public", "container": null, "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.example.Foo",
+      "kind": "class", "name": "Foo", "language": "java",
+      "file_id": "f01", "line_start": 1, "line_end": 10,
+      "visibility": "public", "container": null, "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    }
+  ],
+  "call_edges": [],
+  "config_reads": [],
+  "runtime": { "observed_symbols": [], "observed_edges": [] }
+}
