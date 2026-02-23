@@ -10,7 +10,6 @@ com/contextslice/adapter/ir/RuntimeTrace$ObservedEdge.class
 com/contextslice/adapter/ir/RuntimeTrace$ObservedSymbol.class
 com/contextslice/adapter/static_analysis/StaticAnalyzer.class
 com/contextslice/adapter/manifest/ManifestReader.class
-com/contextslice/adapter/ir/RuntimeTrace$ConfigRead.class
 com/contextslice/adapter/static_analysis/SourceRootResolver.class
 com/contextslice/adapter/ir/IrSerializer.class
 com/contextslice/adapter/static_analysis/CallEdgeExtractor.class
@@ -28,7 +27,6 @@ com/contextslice/adapter/ir/IrModel$IrRuntime.class
 com/contextslice/adapter/ir/IrModel$IrObservedSymbol.class
 com/contextslice/adapter/AdapterMain$UsageException.class
 com/contextslice/adapter/static_analysis/JdtAstParser.class
-com/contextslice/adapter/ir/IrModel$IrConfigRead.class
 com/contextslice/adapter/static_analysis/JdtAstParser$1.class
 com/contextslice/adapter/ir/IrModel.class
 com/contextslice/adapter/static_analysis/StaticIr.class

@@ -5,6 +5,8 @@ const subprocess = @import("subprocess.zig");
 const util_fs = @import("../util/fs.zig");
 const RecordArgs = @import("../cli/commands/record.zig").RecordArgs;
 
+const embedded_jars = @import("embedded_jars");
+
 /// Returned on successful orchestration.
 pub const OrchestrationResult = struct {
     /// Caller owns this string and must free it with allocator.free().
@@ -15,25 +17,47 @@ pub const OrchestrationResult = struct {
     }
 };
 
+fn extractEmbeddedJars(allocator: std.mem.Allocator) !struct { adapter: []const u8, agent: []const u8 } {
+    const tmp = std.posix.getenv("TMPDIR") orelse "/tmp";
+
+    const adapter_path = try std.fs.path.join(allocator, &.{ tmp, "context-adapter-java-0.1.0.jar" });
+    errdefer allocator.free(adapter_path);
+    {
+        const f = try std.fs.createFileAbsolute(adapter_path, .{});
+        defer f.close();
+        try f.writeAll(embedded_jars.adapter);
+    }
+
+    const agent_path = try std.fs.path.join(allocator, &.{ tmp, "context-agent-java-0.1.0.jar" });
+    errdefer allocator.free(agent_path);
+    {
+        const f = try std.fs.createFileAbsolute(agent_path, .{});
+        defer f.close();
+        try f.writeAll(embedded_jars.agent);
+    }
+
+    return .{ .adapter = adapter_path, .agent = agent_path };
+}
+
 /// Runs the full record pipeline:
 ///   detect language → write manifest → spawn adapter → wait for exit.
 ///
 /// Returns `error.UnsupportedLanguage` if language detection fails.
-/// Returns `error.AdapterNotFound` if adapter_jar_path does not exist.
 /// Returns `error.AdapterFailed` if the adapter subprocess exits non-zero.
 pub fn run(
     args: RecordArgs,
     project_root: []const u8,
-    adapter_jar_path: []const u8,
-    agent_jar_path: []const u8,
     allocator: std.mem.Allocator,
 ) !OrchestrationResult {
+    const jars = try extractEmbeddedJars(allocator);
+    defer {
+        allocator.free(jars.adapter);
+        allocator.free(jars.agent);
+    }
+
     // --- Language detection ---
     const lang = try detector.detect(project_root, allocator);
     if (lang == .unknown) return error.UnsupportedLanguage;
-
-    // --- Validate adapter JAR existence ---
-    if (!util_fs.fileExists(adapter_jar_path)) return error.AdapterNotFound;
 
     // --- Create output directory ---
     const output_dir = try std.fmt.allocPrint(allocator, "{s}/.context-slice", .{project_root});
@@ -86,8 +110,8 @@ pub fn run(
 
     // --- Spawn adapter subprocess ---
     const argv = try buildAdapterCommand(
-        adapter_jar_path,
-        agent_jar_path,
+        jars.adapter,
+        jars.agent,
         manifest_path,
         output_dir,
         allocator,
@@ -173,85 +197,13 @@ test "orchestrator: unknown language returns error" {
         .scenario_name = "test",
         .config_file = null,
         .run_args = &.{},
-        .adapter_jar = null,
-        .agent_jar = null,
         .run_script = null,
         .namespace = null,
         .server_port = null,
     };
 
-    const result = run(args, tmp_path, "/fake/adapter.jar", "/fake/agent.jar", std.testing.allocator);
+    const result = run(args, tmp_path, std.testing.allocator);
     try std.testing.expectError(error.UnsupportedLanguage, result);
-}
-
-test "orchestrator: adapter JAR not found returns error" {
-    const tmp = std.testing.tmpDir(.{});
-    defer @constCast(&tmp).cleanup();
-
-    var path_buf: [std.fs.max_path_bytes]u8 = undefined;
-    const tmp_path = try tmp.dir.realpath(".", &path_buf);
-
-    // Create pom.xml so language detection succeeds
-    const pom = try std.fmt.allocPrint(std.testing.allocator, "{s}/pom.xml", .{tmp_path});
-    defer std.testing.allocator.free(pom);
-    try util_fs.writeFile(pom, "<project/>");
-
-    const args = RecordArgs{
-        .scenario_name = "test",
-        .config_file = null,
-        .run_args = &.{},
-        .adapter_jar = null,
-        .agent_jar = null,
-        .run_script = null,
-        .namespace = null,
-        .server_port = null,
-    };
-
-    const result = run(args, tmp_path, "/nonexistent/adapter.jar", "/nonexistent/agent.jar", std.testing.allocator);
-    try std.testing.expectError(error.AdapterNotFound, result);
-}
-
-test "orchestrator: manifest written before subprocess spawned" {
-    const tmp = std.testing.tmpDir(.{});
-    defer @constCast(&tmp).cleanup();
-
-    var path_buf: [std.fs.max_path_bytes]u8 = undefined;
-    const tmp_path = try tmp.dir.realpath(".", &path_buf);
-
-    // Create pom.xml so language detection succeeds
-    const pom = try std.fmt.allocPrint(std.testing.allocator, "{s}/pom.xml", .{tmp_path});
-    defer std.testing.allocator.free(pom);
-    try util_fs.writeFile(pom, "<project/>");
-
-    // Create a fake adapter JAR that just exits successfully
-    // We use "true" (a shell built-in) but need a real file path.
-    // Use /bin/sh as the "adapter JAR" — but that won't work as "java -jar".
-    // Instead, check that manifest.json is written even though subprocess fails.
-    const fake_jar = try std.fmt.allocPrint(std.testing.allocator, "{s}/fake.jar", .{tmp_path});
-    defer std.testing.allocator.free(fake_jar);
-    try util_fs.writeFile(fake_jar, "");  // empty file exists
-
-    const args = RecordArgs{
-        .scenario_name = "submit-order",
-        .config_file = null,
-        .run_args = &.{},
-        .adapter_jar = null,
-        .agent_jar = null,
-        .run_script = null,
-        .namespace = null,
-        .server_port = null,
-    };
-
-    // The adapter will fail (can't run an empty file as a JAR), but manifest should be written first.
-    const result = run(args, tmp_path, fake_jar, fake_jar, std.testing.allocator);
-
-    // Verify manifest was written to the project root (before the subprocess ran)
-    const manifest_path = try std.fmt.allocPrint(std.testing.allocator, "{s}/manifest.json", .{tmp_path});
-    defer std.testing.allocator.free(manifest_path);
-    try std.testing.expect(util_fs.fileExists(manifest_path));
-
-    // The run itself fails because java can't execute an empty JAR
-    _ = result catch {}; // expected to fail — we just care manifest was written
 }
 
 test "orchestrator: buildAdapterCommand produces expected argv" {

@@ -23,7 +23,6 @@ class ShutdownHookTest {
         RuntimeTracer.push("com.example.A::foo");
         RuntimeTracer.push("com.example.B::bar");
         RuntimeTracer.recordEdge("com.example.A::foo", "com.example.B::bar");
-        RuntimeTracer.recordConfig("com.example.B::bar", "app.feature", "enabled");
         RuntimeTracer.pop();
         RuntimeTracer.pop();
 
@@ -44,12 +43,6 @@ class ShutdownHookTest {
         assertEquals("com.example.A::foo", trace.observedEdges.get(0).caller);
         assertEquals("com.example.B::bar", trace.observedEdges.get(0).callee);
         assertEquals(1L, trace.observedEdges.get(0).callCount);
-
-        // configReads: 1 read
-        assertEquals(1, trace.configReads.size());
-        assertEquals("com.example.B::bar", trace.configReads.get(0).symbolId);
-        assertEquals("app.feature", trace.configReads.get(0).configKey);
-        assertEquals("enabled", trace.configReads.get(0).resolvedValue);
     }
 
     @Test
@@ -71,7 +64,6 @@ class ShutdownHookTest {
     void deterministicOutput(@TempDir Path tmp) throws Exception {
         RuntimeTracer.push("com.example.X::go");
         RuntimeTracer.recordEdge("com.example.X::go", "com.example.Y::run");
-        RuntimeTracer.recordConfig("com.example.X::go", "key", "val");
         RuntimeTracer.pop();
 
         Path p1 = tmp.resolve("trace1.json");

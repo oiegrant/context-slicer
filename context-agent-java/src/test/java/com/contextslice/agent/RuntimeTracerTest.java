@@ -64,26 +64,6 @@ class RuntimeTracerTest {
         assertTrue(RuntimeTracer.edgeCounts.isEmpty());
     }
 
-    // --- Config recording ---
-
-    @Test
-    void recordConfigStoresValue() {
-        RuntimeTracer.recordConfig("A", "order.provider", "stripe");
-        assertEquals("stripe", RuntimeTracer.configReads.get("A").get("order.provider"));
-    }
-
-    @Test
-    void recordConfigWithNullResolvedValueStoresUnset() {
-        RuntimeTracer.recordConfig("A", "some.key", null);
-        assertEquals("<unset>", RuntimeTracer.configReads.get("A").get("some.key"));
-    }
-
-    @Test
-    void recordConfigWithNullSymbolIdIsIgnored() {
-        assertDoesNotThrow(() -> RuntimeTracer.recordConfig(null, "key", "val"));
-        assertTrue(RuntimeTracer.configReads.isEmpty());
-    }
-
     // --- Thread isolation ---
 
     @Test

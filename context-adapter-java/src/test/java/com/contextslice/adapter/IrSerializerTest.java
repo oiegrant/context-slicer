@@ -43,7 +43,6 @@ class IrSerializerTest {
         root.scenario.entryPoints = List.of();
         root.symbols = List.of(s1, s2);  // Z before A intentionally
         root.callEdges = List.of(edge1, edge2);  // Z→A before A→Z intentionally
-        root.configReads = List.of();
         root.files = List.of();
         root.runtime = new IrModel.IrRuntime();
         root.runtime.observedSymbols = List.of();

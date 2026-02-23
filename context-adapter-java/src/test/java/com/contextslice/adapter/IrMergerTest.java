@@ -56,7 +56,6 @@ class IrMergerTest {
         RuntimeTrace rt = new RuntimeTrace();
         rt.observedEdges = Collections.emptyList();
         rt.observedSymbols = Collections.emptyList();
-        rt.configReads = Collections.emptyList();
 
         IrModel.IrRoot merged = new IrMerger().merge(staticIr, rt, "test", List.of("A"), ".");
 
@@ -75,7 +74,6 @@ class IrMergerTest {
         RuntimeTrace rt = new RuntimeTrace();
         rt.observedEdges = List.of(runtimeEdge("A", "B", 3));
         rt.observedSymbols = List.of(runtimeSymbol("A", 3), runtimeSymbol("B", 3));
-        rt.configReads = Collections.emptyList();
 
         IrModel.IrRoot merged = new IrMerger().merge(staticIr, rt, "test", List.of("A"), ".");
 
@@ -97,36 +95,11 @@ class IrMergerTest {
         RuntimeTrace rt = new RuntimeTrace();
         rt.observedEdges = Collections.emptyList();
         rt.observedSymbols = Collections.emptyList();
-        rt.configReads = Collections.emptyList();
 
         IrModel.IrRoot merged = new IrMerger().merge(staticIr, rt, "test", List.of(), ".");
 
         assertEquals(1, merged.symbols.size(), "Duplicate symbol should be deduplicated");
         assertEquals("class", merged.symbols.get(0).kind, "First symbol should win");
-    }
-
-    @Test
-    void configReadsFromRuntimeIncluded() {
-        StaticIr staticIr = new StaticIr(
-                Collections.emptyList(),
-                List.of(makeSymbol("A", "method")),
-                Collections.emptyList()
-        );
-        RuntimeTrace rt = new RuntimeTrace();
-        rt.observedEdges = Collections.emptyList();
-        rt.observedSymbols = Collections.emptyList();
-
-        RuntimeTrace.ConfigRead cr = new RuntimeTrace.ConfigRead();
-        cr.symbolId = "A";
-        cr.configKey = "order.payment.provider";
-        cr.resolvedValue = "stripe";
-        rt.configReads = List.of(cr);
-
-        IrModel.IrRoot merged = new IrMerger().merge(staticIr, rt, "test", List.of(), ".");
-
-        assertEquals(1, merged.configReads.size());
-        assertEquals("order.payment.provider", merged.configReads.get(0).configKey);
-        assertEquals("stripe", merged.configReads.get(0).resolvedValue);
     }
 
     @Test
@@ -139,7 +112,6 @@ class IrMergerTest {
         RuntimeTrace rt = new RuntimeTrace();
         rt.observedEdges = Collections.emptyList();
         rt.observedSymbols = Collections.emptyList();
-        rt.configReads = Collections.emptyList();
 
         IrModel.IrRoot merged = new IrMerger().merge(staticIr, rt, "test", List.of(), ".");
 
@@ -153,7 +125,6 @@ class IrMergerTest {
         RuntimeTrace rt = new RuntimeTrace();
         rt.observedEdges = Collections.emptyList();
         rt.observedSymbols = Collections.emptyList();
-        rt.configReads = Collections.emptyList();
 
         IrModel.IrRoot merged = new IrMerger().merge(staticIr, rt, "my-scenario", List.of("EP"), "/repo");
 

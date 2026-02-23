@@ -1,0 +1,16 @@
+{
+  "edges": [
+    {"caller":"java::com.contextslice.fixture.OrderController::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.OrderService::createOrder(OrderRequest)","call_count":0,"runtime_observed":false,"is_static":true},
+    {"caller":"java::com.contextslice.fixture.OrderController::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","call_count":1,"runtime_observed":true,"is_static":false},
+    {"caller":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.OrderRequest::getAmount()","call_count":1,"runtime_observed":true,"is_static":true},
+    {"caller":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.OrderRequest::getCustomerId()","call_count":1,"runtime_observed":true,"is_static":true},
+    {"caller":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.OrderResponse","call_count":0,"runtime_observed":false,"is_static":true},
+    {"caller":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.PaymentRequest","call_count":0,"runtime_observed":false,"is_static":true},
+    {"caller":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.PaymentResult::getErrorMessage()","call_count":0,"runtime_observed":false,"is_static":true},
+    {"caller":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.PaymentResult::getTransactionId()","call_count":1,"runtime_observed":true,"is_static":true},
+    {"caller":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.PaymentResult::isSuccess()","call_count":1,"runtime_observed":true,"is_static":true},
+    {"caller":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.PaymentService::charge(PaymentRequest)","call_count":0,"runtime_observed":false,"is_static":true},
+    {"caller":"java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)","callee":"java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)","call_count":1,"runtime_observed":true,"is_static":false},
+    {"caller":"java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)","callee":"java::com.contextslice.fixture.PaymentResult","call_count":0,"runtime_observed":false,"is_static":true}
+  ]
+}

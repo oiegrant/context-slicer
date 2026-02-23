@@ -59,7 +59,6 @@ pub fn main() !void {
 
     var cwd_buf: [std.fs.max_path_bytes]u8 = undefined;
     const project_root = try std.fs.cwd().realpath(".", &cwd_buf);
-
     const tag = cli.run(args, allocator) catch |err| {
         switch (err) {
             error.HelpRequested => std.process.exit(0),
@@ -86,23 +85,10 @@ pub fn main() !void {
             };
             defer if (record_args.run_args.len > 0) allocator.free(record_args.run_args);
 
-            const adapter_jar = record_args.adapter_jar orelse {
-                const stderr = std.fs.File.stderr();
-                stderr.writeAll("Error: --adapter-jar is required. Pass the path to context-adapter-java.jar.\n") catch {};
-                std.process.exit(1);
-            };
-
-            const agent_jar = record_args.agent_jar orelse {
-                const stderr = std.fs.File.stderr();
-                stderr.writeAll("Error: --agent-jar is required. Pass the path to context-agent-java.jar.\n") catch {};
-                std.process.exit(1);
-            };
-
-            const result = orchestrator.run(record_args, project_root, adapter_jar, agent_jar, allocator) catch |err| {
+            const result = orchestrator.run(record_args, project_root, allocator) catch |err| {
                 const stderr = std.fs.File.stderr();
                 switch (err) {
                     error.UnsupportedLanguage => stderr.writeAll("Error: Unsupported project type. Only Java (Maven/Gradle) is supported.\n") catch {},
-                    error.AdapterNotFound => stderr.writeAll("Error: Adapter JAR not found.\n") catch {},
                     error.AdapterFailed => stderr.writeAll("Error: Adapter exited with a non-zero status.\n") catch {},
                     else => stderr.writeAll("Error: record failed.\n") catch {},
                 }
@@ -157,7 +143,6 @@ pub fn main() !void {
         },
     }
 }
-
 
 test "main compiles" {
     const allocator = std.testing.allocator;
