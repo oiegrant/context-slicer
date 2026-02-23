@@ -18,7 +18,6 @@ pub const MergedEdge = struct {
 pub const MergedIr = struct {
     symbols: []types.Symbol,
     call_edges: []MergedEdge,
-    config_reads: []types.ConfigRead,
     files: []const types.IrFile,
     ir_version: []const u8,
     language: []const u8,
@@ -31,7 +30,6 @@ pub const MergedIr = struct {
     pub fn deinit(self: MergedIr) void {
         self._alloc.free(self.symbols);
         self._alloc.free(self.call_edges);
-        self._alloc.free(self.config_reads);
     }
 };
 
@@ -40,7 +38,6 @@ pub const MergedIr = struct {
 /// - Deduplicates symbols by ID (first occurrence wins).
 /// - For each static call edge, looks up if the caller→callee pair was observed
 ///   at runtime; sets runtime_observed and call_count accordingly.
-/// - Appends config_reads from the runtime trace to those from the static IR.
 pub fn merge(
     static_ir: validator.ValidationResult,
     runtime: types.RuntimeTrace,
@@ -114,21 +111,9 @@ pub fn merge(
         });
     }
 
-    // Merge config_reads: static first, then runtime
-    var config_reads: std.ArrayListUnmanaged(types.ConfigRead) = .{};
-    errdefer config_reads.deinit(allocator);
-
-    for (static_ir.config_reads) |cr| {
-        try config_reads.append(allocator, cr);
-    }
-    for (runtime.config_reads) |cr| {
-        try config_reads.append(allocator, cr);
-    }
-
     return MergedIr{
         .symbols = try symbols.toOwnedSlice(allocator),
         .call_edges = try edges.toOwnedSlice(allocator),
-        .config_reads = try config_reads.toOwnedSlice(allocator),
         .files = static_ir.files,
         .ir_version = static_ir.ir_version,
         .language = static_ir.language,
@@ -169,7 +154,6 @@ fn makeValidated(
         .files = &[_]types.IrFile{},
         .symbols = symbols,
         .call_edges = edges,
-        .config_reads = &[_]types.ConfigRead{},
         .warnings = &[_]validator.ValidationWarning{},
         ._alloc = std.testing.allocator,
     };
@@ -196,7 +180,6 @@ test "static edge not in runtime: runtimeObserved=false callCount=0" {
     const empty_runtime = types.RuntimeTrace{
         .observed_symbols = &[_]types.ObservedSymbol{},
         .observed_edges = &[_]types.ObservedEdge{},
-        .config_reads = &[_]types.ConfigRead{},
     };
 
     var merged = try merge(validated, empty_runtime, std.testing.allocator);
@@ -219,7 +202,6 @@ test "static edge in runtime with count=5: runtimeObserved=true callCount=5" {
     const runtime = types.RuntimeTrace{
         .observed_symbols = &[_]types.ObservedSymbol{},
         .observed_edges = &rt_edges,
-        .config_reads = &[_]types.ConfigRead{},
     };
 
     var merged = try merge(validated, runtime, std.testing.allocator);
@@ -237,7 +219,6 @@ test "duplicate symbol in static: MergedIr.symbols has unique IDs only" {
     const runtime = types.RuntimeTrace{
         .observed_symbols = &[_]types.ObservedSymbol{},
         .observed_edges = &[_]types.ObservedEdge{},
-        .config_reads = &[_]types.ConfigRead{},
     };
 
     var merged = try merge(validated, runtime, std.testing.allocator);
@@ -245,27 +226,6 @@ test "duplicate symbol in static: MergedIr.symbols has unique IDs only" {
 
     try std.testing.expectEqual(@as(usize, 1), merged.symbols.len);
     try std.testing.expectEqualStrings("A", merged.symbols[0].id);
-}
-
-test "config reads from runtime appended to merged config_reads" {
-    var syms = [_]types.Symbol{makeSymbol("A")};
-    var edges = [_]types.CallEdge{};
-    const validated = makeValidated(&syms, &edges);
-
-    const rt_config = [_]types.ConfigRead{.{
-        .symbol_id = "A", .config_key = "db.url", .resolved_value = "postgres://localhost",
-    }};
-    const runtime = types.RuntimeTrace{
-        .observed_symbols = &[_]types.ObservedSymbol{},
-        .observed_edges = &[_]types.ObservedEdge{},
-        .config_reads = &rt_config,
-    };
-
-    var merged = try merge(validated, runtime, std.testing.allocator);
-    defer merged.deinit();
-
-    try std.testing.expectEqual(@as(usize, 1), merged.config_reads.len);
-    try std.testing.expectEqualStrings("db.url", merged.config_reads[0].config_key);
 }
 
 test "symbol not observed at runtime still present in merged symbols" {
@@ -277,7 +237,6 @@ test "symbol not observed at runtime still present in merged symbols" {
     const runtime = types.RuntimeTrace{
         .observed_symbols = &rt_symbols,
         .observed_edges = &[_]types.ObservedEdge{},
-        .config_reads = &[_]types.ConfigRead{},
     };
 
     var merged = try merge(validated, runtime, std.testing.allocator);
@@ -306,10 +265,6 @@ test "merge fixtures: StripePaymentService.charge edge is runtime_observed" {
     // But the merger annotates static edges that match runtime edges.
     // Check that the PaymentService::charge edge is NOT runtime-observed (it's an interface call)
     // and StripePaymentService::charge isn't in static call_edges at all (no static edge to concrete impl).
-
-    // The important assertion: merged has non-zero config reads from runtime
-    try std.testing.expect(merged.config_reads.len > 0);
-    try std.testing.expectEqualStrings("order.payment.provider", merged.config_reads[0].config_key);
 
     // Symbol count should equal unique symbols from static IR (17)
     try std.testing.expectEqual(@as(usize, 17), merged.symbols.len);

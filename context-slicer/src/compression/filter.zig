@@ -16,7 +16,6 @@ pub const FilteredEdge = struct {
 pub const FilteredGraph = struct {
     symbols: []types.Symbol,
     edges: []FilteredEdge,
-    config_reads: []const types.ConfigRead,
     _alloc: std.mem.Allocator,
 
     pub fn deinit(self: FilteredGraph) void {
@@ -30,12 +29,10 @@ pub const FilteredGraph = struct {
 ///
 /// `symbols`      — the full expanded symbol set
 /// `edges`        — the full merged edge set (will be filtered to symbols)
-/// `config_reads` — passed through unchanged
 /// `protected_ids`— set of symbol IDs to keep even if is_framework=true
 pub fn applyFrameworkFilter(
     symbols: []const types.Symbol,
     edges: []const merger.MergedEdge,
-    config_reads: []const types.ConfigRead,
     protected_ids: std.StringHashMap(void),
     allocator: std.mem.Allocator,
 ) !FilteredGraph {
@@ -74,7 +71,6 @@ pub fn applyFrameworkFilter(
     return FilteredGraph{
         .symbols = try filtered_syms.toOwnedSlice(allocator),
         .edges = try filtered_edges.toOwnedSlice(allocator),
-        .config_reads = config_reads,
         ._alloc = allocator,
     };
 }
@@ -103,7 +99,6 @@ pub fn applyEdgeFilter(
     return FilteredGraph{
         .symbols = sym_copy,
         .edges = try kept_edges.toOwnedSlice(allocator),
-        .config_reads = graph.config_reads,
         ._alloc = allocator,
     };
 }
@@ -138,7 +133,7 @@ test "framework node not in protected_ids is removed" {
     var protected = std.StringHashMap(void).init(std.testing.allocator);
     defer protected.deinit();
 
-    var result = try applyFrameworkFilter(&syms, &edges, &[_]types.ConfigRead{}, protected, std.testing.allocator);
+    var result = try applyFrameworkFilter(&syms, &edges, protected, std.testing.allocator);
     defer result.deinit();
 
     try std.testing.expectEqual(@as(usize, 1), result.symbols.len);
@@ -154,7 +149,7 @@ test "framework node in protected_ids is kept" {
     defer protected.deinit();
     try protected.put("StripeService", {});
 
-    var result = try applyFrameworkFilter(&syms, &edges, &[_]types.ConfigRead{}, protected, std.testing.allocator);
+    var result = try applyFrameworkFilter(&syms, &edges, protected, std.testing.allocator);
     defer result.deinit();
 
     try std.testing.expectEqual(@as(usize, 1), result.symbols.len);
@@ -175,7 +170,7 @@ test "removing a node also removes edges to/from that node" {
     var protected = std.StringHashMap(void).init(std.testing.allocator);
     defer protected.deinit();
 
-    var result = try applyFrameworkFilter(&syms, &edges, &[_]types.ConfigRead{}, protected, std.testing.allocator);
+    var result = try applyFrameworkFilter(&syms, &edges, protected, std.testing.allocator);
     defer result.deinit();
 
     try std.testing.expectEqual(@as(usize, 2), result.symbols.len);
@@ -192,7 +187,7 @@ test "applyEdgeFilter: edge callCount=0 with minCallCount=1 is removed" {
     var protected = std.StringHashMap(void).init(std.testing.allocator);
     defer protected.deinit();
 
-    var fg = try applyFrameworkFilter(&syms, &edges, &[_]types.ConfigRead{}, protected, std.testing.allocator);
+    var fg = try applyFrameworkFilter(&syms, &edges, protected, std.testing.allocator);
     defer fg.deinit();
 
     var filtered = try applyEdgeFilter(fg, 1, std.testing.allocator);
@@ -209,7 +204,7 @@ test "applyEdgeFilter: edge callCount=3 is kept with minCallCount=1" {
     var protected = std.StringHashMap(void).init(std.testing.allocator);
     defer protected.deinit();
 
-    var fg = try applyFrameworkFilter(&syms, &edges, &[_]types.ConfigRead{}, protected, std.testing.allocator);
+    var fg = try applyFrameworkFilter(&syms, &edges, protected, std.testing.allocator);
     defer fg.deinit();
 
     var filtered = try applyEdgeFilter(fg, 1, std.testing.allocator);

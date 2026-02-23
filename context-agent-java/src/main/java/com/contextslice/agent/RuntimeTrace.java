@@ -15,9 +15,6 @@ public class RuntimeTrace {
     @SerializedName("observed_edges")
     public List<ObservedEdge> observedEdges;
 
-    @SerializedName("config_reads")
-    public List<ConfigRead> configReads;
-
     public static class ObservedSymbol {
         @SerializedName("symbol_id")  public String symbolId;
         @SerializedName("call_count") public long callCount;
@@ -29,9 +26,4 @@ public class RuntimeTrace {
         @SerializedName("call_count") public long callCount;
     }
 
-    public static class ConfigRead {
-        @SerializedName("symbol_id")      public String symbolId;
-        @SerializedName("config_key")     public String configKey;
-        @SerializedName("resolved_value") public String resolvedValue;
-    }
 }

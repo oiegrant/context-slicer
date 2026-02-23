@@ -57,14 +57,11 @@ pub fn parseResponseText(body: []const u8, allocator: std.mem.Allocator) ![]cons
 pub fn complete(prompt: []const u8, allocator: std.mem.Allocator) !void {
     // Read API key from environment
     const api_key = std.process.getEnvVarOwned(allocator, "ANTHROPIC_API_KEY") catch |err| {
-        if (err == error.EnvironmentVariableNotFound) {
-            const stderr = std.fs.File.stderr();
-            stderr.writeAll("Set ANTHROPIC_API_KEY environment variable\n") catch {};
-            return error.MissingApiKey;
-        }
+        if (err == error.EnvironmentVariableNotFound) return error.MissingApiKey;
         return err;
     };
     defer allocator.free(api_key);
+    if (api_key.len == 0) return error.MissingApiKey;
 
     // Build JSON request body
     const messages = [_]Message{.{ .role = "user", .content = prompt }};
@@ -80,8 +77,9 @@ pub fn complete(prompt: []const u8, allocator: std.mem.Allocator) !void {
     var client = std.http.Client{ .allocator = allocator };
     defer client.deinit();
 
-    var response_storage: std.ArrayList(u8) = .{ .items = &.{}, .capacity = 0, .allocator = allocator };
-    defer response_storage.deinit();
+    // Use Zig 0.15.2 Allocating writer for response body capture
+    var aw: std.Io.Writer.Allocating = .init(allocator);
+    defer aw.deinit();
 
     const extra_headers = [_]std.http.Header{
         .{ .name = "x-api-key", .value = api_key },
@@ -94,8 +92,7 @@ pub fn complete(prompt: []const u8, allocator: std.mem.Allocator) !void {
         .location = .{ .url = API_URL },
         .extra_headers = &extra_headers,
         .payload = body_json,
-        .response_storage = .{ .dynamic = &response_storage },
-        .max_append_size = 10 * 1024 * 1024,
+        .response_writer = &aw.writer,
     });
 
     switch (fetch_result.status) {
@@ -112,7 +109,9 @@ pub fn complete(prompt: []const u8, allocator: std.mem.Allocator) !void {
     }
 
     // Parse and print response
-    const text = try parseResponseText(response_storage.items, allocator);
+    const response_bytes = try aw.toOwnedSlice();
+    defer allocator.free(response_bytes);
+    const text = try parseResponseText(response_bytes, allocator);
     defer allocator.free(text);
 
     const stdout = std.fs.File.stdout();

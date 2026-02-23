@@ -1,0 +1,3 @@
+how are config_reads scheme generated? Seems to look at file paths which isn't generalizable, also what exactly does this get used for?
+
+Heavily review the Child/subprocess code

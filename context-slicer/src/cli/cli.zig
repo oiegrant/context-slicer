@@ -10,6 +10,7 @@ comptime {
 pub const SubcommandTag = enum { record, slice, prompt };
 
 /// Route `args[0]` to the appropriate subcommand.
+/// Returns `error.HelpRequested` if `--help`, `-h`, or `help` is the first arg.
 /// Returns `error.UnknownSubcommand` if the subcommand is not recognized.
 /// Returns `error.MissingSubcommand` if args is empty.
 pub fn run(args: []const []const u8, allocator: std.mem.Allocator) !SubcommandTag {
@@ -20,6 +21,16 @@ pub fn run(args: []const []const u8, allocator: std.mem.Allocator) !SubcommandTa
     }
 
     const cmd = args[0];
+
+    // Top-level --help / help
+    if (std.mem.eql(u8, cmd, "--help") or
+        std.mem.eql(u8, cmd, "-h") or
+        std.mem.eql(u8, cmd, "help"))
+    {
+        printUsage();
+        return error.HelpRequested;
+    }
+
     if (std.mem.eql(u8, cmd, "record")) {
         return .record;
     } else if (std.mem.eql(u8, cmd, "slice")) {
@@ -81,4 +92,22 @@ test "empty args returns error" {
     const args = [_][]const u8{};
     const result = run(&args, std.testing.allocator);
     try std.testing.expectError(error.MissingSubcommand, result);
+}
+
+test "--help returns HelpRequested" {
+    const args = [_][]const u8{"--help"};
+    const result = run(&args, std.testing.allocator);
+    try std.testing.expectError(error.HelpRequested, result);
+}
+
+test "-h returns HelpRequested" {
+    const args = [_][]const u8{"-h"};
+    const result = run(&args, std.testing.allocator);
+    try std.testing.expectError(error.HelpRequested, result);
+}
+
+test "help subcommand returns HelpRequested" {
+    const args = [_][]const u8{"help"};
+    const result = run(&args, std.testing.allocator);
+    try std.testing.expectError(error.HelpRequested, result);
 }

@@ -10,15 +10,30 @@ pub const Manifest = struct {
     run_args: []const []const u8,
     config_files: []const []const u8,
     output_dir: []const u8,
+    // Optional fields read/preserved from the project's manifest.json
+    namespace: ?[]const u8 = null,
+    server_port: ?i64 = null,
+    run_script: ?[]const u8 = null,
 };
 
-/// Serializes the manifest to `<output_dir>/manifest.json`.
-/// Creates `output_dir` if it does not exist.
-pub fn write(manifest: Manifest, output_dir: []const u8, allocator: std.mem.Allocator) !void {
-    try util_fs.createDirIfAbsent(output_dir);
-    const path = try std.fmt.allocPrint(allocator, "{s}/manifest.json", .{output_dir});
+/// Serializes the manifest to `<dir>/manifest.json`.
+/// Creates `dir` if it does not exist.
+pub fn write(manifest: Manifest, dir: []const u8, allocator: std.mem.Allocator) !void {
+    try util_fs.createDirIfAbsent(dir);
+    const path = try std.fmt.allocPrint(allocator, "{s}/manifest.json", .{dir});
     defer allocator.free(path);
     try json_util.writeToFile(manifest, path, allocator);
+}
+
+/// Reads and parses `<dir_path>/manifest.json`.
+/// Returns null if the file does not exist.
+/// Caller owns the returned Parsed value and must call parsed.deinit().
+pub fn readIfExists(dir_path: []const u8, allocator: std.mem.Allocator) !?std.json.Parsed(Manifest) {
+    const path = try std.fmt.allocPrint(allocator, "{s}/manifest.json", .{dir_path});
+    defer allocator.free(path);
+    if (!util_fs.fileExists(path)) return null;
+    const parsed = try json_util.parseTypedFromFile(Manifest, path, allocator);
+    return parsed;
 }
 
 /// Reads and parses `<dir_path>/manifest.json`.

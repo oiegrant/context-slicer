@@ -122,17 +122,6 @@ public class IrMerger {
             mergedEdgeKeys.add(key);
         }
 
-        // --- Build config reads from runtime trace ---
-        List<IrModel.IrConfigRead> configReads = new ArrayList<>();
-        for (RuntimeTrace.ConfigRead cr : runtime.getConfigReads()) {
-            if (cr.symbolId == null || cr.configKey == null) continue;
-            IrModel.IrConfigRead irCr = new IrModel.IrConfigRead();
-            irCr.symbolId = cr.symbolId;
-            irCr.configKey = cr.configKey;
-            irCr.resolvedValue = cr.resolvedValue;
-            configReads.add(irCr);
-        }
-
         // --- Build runtime block ---
         IrModel.IrRuntime runtimeBlock = new IrModel.IrRuntime();
         runtimeBlock.observedSymbols = runtime.getObservedSymbols().stream()
@@ -170,7 +159,6 @@ public class IrMerger {
         root.files = staticIr.files();
         root.symbols = new ArrayList<>(symbolById.values());
         root.callEdges = mergedEdges;
-        root.configReads = configReads;
         root.runtime = runtimeBlock;
 
         return root;

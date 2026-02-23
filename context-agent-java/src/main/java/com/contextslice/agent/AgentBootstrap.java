@@ -32,9 +32,11 @@ public class AgentBootstrap {
 
         // Build and install ByteBuddy instrumentation
         new AgentBuilder.Default()
-            // Only instrument app classes in target namespace; exclude proxies and generated classes
+            // Only instrument app classes in target namespace; exclude proxies, generated classes,
+            // and the agent itself (to prevent infinite recursion in RuntimeTracer).
             .type(
                 nameStartsWith(config.namespace)
+                    .and(not(nameStartsWith("com.contextslice.agent")))
                     .and(not(nameContains("$$EnhancerBySpring")))
                     .and(not(nameContains("$Proxy")))
                     .and(not(nameContains("CGLIB")))
@@ -49,14 +51,6 @@ public class AgentBootstrap {
                         .and(not(isSynthetic()))
                 )
                 .intercept(Advice.to(MethodAdvice.class))
-            )
-            // Config interception: Spring's AbstractEnvironment.getProperty(String)
-            .type(named("org.springframework.core.env.AbstractEnvironment"))
-            .transform((builder, typeDescription, classLoader, module, protectionDomain) ->
-                builder.method(
-                    named("getProperty").and(takesArguments(1)).and(takesArgument(0, String.class))
-                )
-                .intercept(Advice.to(ConfigAdvice.class))
             )
             .installOn(instrumentation);
 

@@ -15,19 +15,12 @@ public class RuntimeTrace {
     @SerializedName("observed_edges")
     public List<ObservedEdge> observedEdges;
 
-    @SerializedName("config_reads")
-    public List<ConfigRead> configReads;
-
     public List<ObservedSymbol> getObservedSymbols() {
         return observedSymbols != null ? observedSymbols : Collections.emptyList();
     }
 
     public List<ObservedEdge> getObservedEdges() {
         return observedEdges != null ? observedEdges : Collections.emptyList();
-    }
-
-    public List<ConfigRead> getConfigReads() {
-        return configReads != null ? configReads : Collections.emptyList();
     }
 
     public static class ObservedSymbol {
@@ -41,9 +34,4 @@ public class RuntimeTrace {
         @SerializedName("call_count") public long callCount;
     }
 
-    public static class ConfigRead {
-        @SerializedName("symbol_id")      public String symbolId;
-        @SerializedName("config_key")     public String configKey;
-        @SerializedName("resolved_value") public String resolvedValue;
-    }
 }

@@ -22,11 +22,11 @@ pub const Symbol = struct {
     kind: SymbolKind,
     name: []const u8,
     language: []const u8,
-    file_id: ?[]const u8,
+    file_id: ?[]const u8 = null,
     line_start: u32,
     line_end: u32,
     visibility: []const u8,
-    container: ?[]const u8,
+    container: ?[]const u8 = null,
     annotations: []const []const u8,
     is_entry_point: bool,
     is_framework: bool,
@@ -47,15 +47,9 @@ pub const CallEdge = struct {
 pub const Scenario = struct {
     name: []const u8,
     entry_points: []const []const u8,
-    run_args: []const []const u8,
-    config_files: []const []const u8,
-};
-
-/// A config key read recorded in the IR (from static analysis or runtime).
-pub const ConfigRead = struct {
-    symbol_id: []const u8,
-    config_key: []const u8,
-    resolved_value: ?[]const u8,
+    // Optional in adapter output — default to empty if absent
+    run_args: []const []const u8 = &.{},
+    config_files: []const []const u8 = &.{},
 };
 
 /// An observed symbol from the runtime trace.
@@ -82,13 +76,13 @@ pub const IrRoot = struct {
     ir_version: []const u8,
     language: []const u8,
     repo_root: []const u8,
-    build_id: []const u8,
+    // Optional in some adapter versions — default to empty string if absent
+    build_id: []const u8 = "",
     adapter_version: []const u8,
     scenario: Scenario,
     files: []const IrFile,
     symbols: []const Symbol,
     call_edges: []const CallEdge,
-    config_reads: []const ConfigRead,
     runtime: RuntimeEntry,
 };
 
@@ -96,7 +90,6 @@ pub const IrRoot = struct {
 pub const RuntimeTrace = struct {
     observed_symbols: []const ObservedSymbol,
     observed_edges: []const ObservedEdge,
-    config_reads: []const ConfigRead,
 };
 
 // ---------------------------------------------------------------------------
@@ -157,7 +150,6 @@ test "can construct IrRoot with all fields" {
         .files = &[_]IrFile{file},
         .symbols = &[_]Symbol{sym},
         .call_edges = &[_]CallEdge{edge},
-        .config_reads = &[_]ConfigRead{},
         .runtime = RuntimeEntry{
             .observed_symbols = &[_]ObservedSymbol{},
             .observed_edges = &[_]ObservedEdge{},

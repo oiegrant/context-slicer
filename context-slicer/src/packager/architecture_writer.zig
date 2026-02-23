@@ -109,7 +109,6 @@ test "write produces architecture.md" {
     const slice = compressor.Slice{
         .ordered_symbols = @constCast(&syms),
         .relevant_file_paths = @constCast(&[_][]const u8{ "src/OrderController.java", "src/StripeOrderService.java" }),
-        .config_influences = &[_]compressor.ConfigInfluence{},
         .call_graph_edges = &[_]@import("../compression/filter.zig").FilteredEdge{},
         ._alloc = std.testing.allocator,
     };
@@ -136,7 +135,6 @@ test "architecture.md starts with # Architecture: header" {
     const slice = compressor.Slice{
         .ordered_symbols = @constCast(&syms),
         .relevant_file_paths = &[_][]const u8{},
-        .config_influences = &[_]compressor.ConfigInfluence{},
         .call_graph_edges = &[_]@import("../compression/filter.zig").FilteredEdge{},
         ._alloc = std.testing.allocator,
     };
@@ -163,7 +161,6 @@ test "StripeOrderService.createOrder appears in architecture.md" {
     const slice = compressor.Slice{
         .ordered_symbols = @constCast(&syms),
         .relevant_file_paths = &[_][]const u8{},
-        .config_influences = &[_]compressor.ConfigInfluence{},
         .call_graph_edges = &[_]@import("../compression/filter.zig").FilteredEdge{},
         ._alloc = std.testing.allocator,
     };

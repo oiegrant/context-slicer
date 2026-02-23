@@ -40,23 +40,48 @@ pub fn run(
     errdefer allocator.free(output_dir);
     try util_fs.createDirIfAbsent(output_dir);
 
-    // --- Write manifest ---
+    // --- Read existing project manifest if present (preserves run_script, server_port, etc.) ---
+    var existing_parsed = try manifest_mod.readIfExists(project_root, allocator);
+    defer if (existing_parsed) |*p| p.deinit();
+
+    const existing = if (existing_parsed) |*p| &p.value else null;
+
+    // CLI overrides: config_files and run_args only override if explicitly provided.
     const config_files: []const []const u8 = if (args.config_file) |cf|
         &[_][]const u8{cf}
+    else if (existing) |e| e.config_files
     else
         &.{};
 
+    const run_args: []const []const u8 = if (args.run_args.len > 0)
+        args.run_args
+    else if (existing) |e| e.run_args
+    else
+        &.{};
+
+    const entry_points: []const []const u8 = if (existing) |e| e.entry_points else &.{};
+    const namespace: ?[]const u8 = args.namespace orelse
+        if (existing) |e| e.namespace else null;
+    const server_port: ?i64 = args.server_port orelse
+        if (existing) |e| e.server_port else null;
+    const run_script: ?[]const u8 = args.run_script orelse
+        if (existing) |e| e.run_script else null;
+
+    // --- Write manifest to project root (adapter uses parent dir of manifest as project root) ---
     const m = manifest_mod.Manifest{
         .scenario_name = args.scenario_name,
-        .entry_points = &.{},
-        .run_args = args.run_args,
+        .entry_points = entry_points,
+        .run_args = run_args,
         .config_files = config_files,
         .output_dir = output_dir,
+        .namespace = namespace,
+        .server_port = server_port,
+        .run_script = run_script,
     };
-    try manifest_mod.write(m, output_dir, allocator);
+    try manifest_mod.write(m, project_root, allocator);
 
     // --- Build manifest path for adapter invocation ---
-    const manifest_path = try std.fmt.allocPrint(allocator, "{s}/manifest.json", .{output_dir});
+    const manifest_path = try std.fmt.allocPrint(allocator, "{s}/manifest.json", .{project_root});
     defer allocator.free(manifest_path);
 
     // --- Spawn adapter subprocess ---
@@ -89,6 +114,22 @@ pub fn run(
     return OrchestrationResult{ .output_dir = output_dir };
 }
 
+/// Returns the path to the `java` binary.
+/// Prefers $JAVA_HOME/bin/java over the bare "java" on PATH (avoids macOS stub).
+fn resolveJavaBinary(allocator: std.mem.Allocator) ![]const u8 {
+    if (std.process.getEnvVarOwned(allocator, "JAVA_HOME")) |java_home| {
+        defer allocator.free(java_home);
+        const bin = try std.fmt.allocPrint(allocator, "{s}/bin/java", .{java_home});
+        // Confirm the resolved binary exists; fall through if not.
+        std.fs.cwd().access(bin, .{}) catch {
+            allocator.free(bin);
+            return allocator.dupe(u8, "java");
+        };
+        return bin;
+    } else |_| {}
+    return allocator.dupe(u8, "java");
+}
+
 fn buildAdapterCommand(
     adapter_jar: []const u8,
     agent_jar: []const u8,
@@ -102,7 +143,7 @@ fn buildAdapterCommand(
         argv.deinit(allocator);
     }
 
-    try argv.append(allocator, try allocator.dupe(u8, "java"));
+    try argv.append(allocator, try resolveJavaBinary(allocator));
     try argv.append(allocator, try allocator.dupe(u8, "-jar"));
     try argv.append(allocator, try allocator.dupe(u8, adapter_jar));
     try argv.append(allocator, try allocator.dupe(u8, "record"));
@@ -132,6 +173,11 @@ test "orchestrator: unknown language returns error" {
         .scenario_name = "test",
         .config_file = null,
         .run_args = &.{},
+        .adapter_jar = null,
+        .agent_jar = null,
+        .run_script = null,
+        .namespace = null,
+        .server_port = null,
     };
 
     const result = run(args, tmp_path, "/fake/adapter.jar", "/fake/agent.jar", std.testing.allocator);
@@ -154,6 +200,11 @@ test "orchestrator: adapter JAR not found returns error" {
         .scenario_name = "test",
         .config_file = null,
         .run_args = &.{},
+        .adapter_jar = null,
+        .agent_jar = null,
+        .run_script = null,
+        .namespace = null,
+        .server_port = null,
     };
 
     const result = run(args, tmp_path, "/nonexistent/adapter.jar", "/nonexistent/agent.jar", std.testing.allocator);
@@ -184,13 +235,18 @@ test "orchestrator: manifest written before subprocess spawned" {
         .scenario_name = "submit-order",
         .config_file = null,
         .run_args = &.{},
+        .adapter_jar = null,
+        .agent_jar = null,
+        .run_script = null,
+        .namespace = null,
+        .server_port = null,
     };
 
     // The adapter will fail (can't run an empty file as a JAR), but manifest should be written first.
     const result = run(args, tmp_path, fake_jar, fake_jar, std.testing.allocator);
 
-    // Verify manifest was written (before the subprocess ran)
-    const manifest_path = try std.fmt.allocPrint(std.testing.allocator, "{s}/.context-slice/manifest.json", .{tmp_path});
+    // Verify manifest was written to the project root (before the subprocess ran)
+    const manifest_path = try std.fmt.allocPrint(std.testing.allocator, "{s}/manifest.json", .{tmp_path});
     defer std.testing.allocator.free(manifest_path);
     try std.testing.expect(util_fs.fileExists(manifest_path));
 

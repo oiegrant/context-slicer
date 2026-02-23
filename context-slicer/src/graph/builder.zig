@@ -68,7 +68,6 @@ fn makeValidated(
         .files = files,
         .symbols = syms,
         .call_edges = edges,
-        .config_reads = &[_]types.ConfigRead{},
         .warnings = &[_]validator.ValidationWarning{},
         ._alloc = std.testing.allocator,
     };
@@ -87,7 +86,6 @@ fn makeSymbol(id: []const u8, kind: types.SymbolKind, file_id: ?[]const u8) type
 const EMPTY_RUNTIME = types.RuntimeTrace{
     .observed_symbols = &[_]types.ObservedSymbol{},
     .observed_edges = &[_]types.ObservedEdge{},
-    .config_reads = &[_]types.ConfigRead{},
 };
 
 test "build from fixtures: nodeCount equals symbol count" {

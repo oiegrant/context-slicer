@@ -56,22 +56,6 @@ public class ShutdownHook implements Runnable {
                               .thenComparing(e -> e.callee))
             .collect(Collectors.toList());
 
-        // Config reads — read from nested map; symbolId and configKey are never split/joined
-        trace.configReads = RuntimeTracer.configReads.entrySet().stream()
-            .flatMap(outerEntry -> {
-                String symbolId = outerEntry.getKey();
-                return outerEntry.getValue().entrySet().stream().map(innerEntry -> {
-                    RuntimeTrace.ConfigRead cr = new RuntimeTrace.ConfigRead();
-                    cr.symbolId = symbolId;
-                    cr.configKey = innerEntry.getKey();
-                    cr.resolvedValue = innerEntry.getValue();
-                    return cr;
-                });
-            })
-            .sorted(Comparator.comparing((RuntimeTrace.ConfigRead cr) -> cr.symbolId)
-                              .thenComparing(cr -> cr.configKey))
-            .collect(Collectors.toList());
-
         return trace;
     }
 

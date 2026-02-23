@@ -8,8 +8,7 @@ import java.util.concurrent.atomic.LongAdder;
 /**
  * Thread-safe, low-allocation in-memory aggregator for runtime observations.
  *
- * Uses record-based keys for edgeCounts and nested maps for configReads —
- * no string parsing/splitting required at read time.
+ * Uses record-based keys for edgeCounts — no string parsing/splitting required at read time.
  */
 public final class RuntimeTracer {
 
@@ -26,11 +25,6 @@ public final class RuntimeTracer {
     // Aggregated call edge counts: EdgeKey(caller, callee) -> count
     // Record keys avoid any string-splitting ambiguity.
     static final ConcurrentHashMap<EdgeKey, LongAdder> edgeCounts =
-        new ConcurrentHashMap<>();
-
-    // Config reads: symbolId -> (configKey -> resolvedValue)
-    // Nested map avoids separator collision with '::' in symbol IDs.
-    static final ConcurrentHashMap<String, ConcurrentHashMap<String, String>> configReads =
         new ConcurrentHashMap<>();
 
     /** Immutable key for a directed call edge. Java records provide correct equals/hashCode. */
@@ -67,17 +61,6 @@ public final class RuntimeTracer {
     }
 
     // -----------------------------------------------------------------------
-    // Config recording
-    // -----------------------------------------------------------------------
-
-    public static void recordConfig(String symbolId, String configKey, String resolvedValue) {
-        if (symbolId == null || configKey == null) return;
-        configReads
-            .computeIfAbsent(symbolId, k -> new ConcurrentHashMap<>())
-            .put(configKey, resolvedValue != null ? resolvedValue : "<unset>");
-    }
-
-    // -----------------------------------------------------------------------
     // Reset (for testing)
     // -----------------------------------------------------------------------
 
@@ -85,6 +68,5 @@ public final class RuntimeTracer {
         stack.get().clear();
         methodCounts.clear();
         edgeCounts.clear();
-        configReads.clear();
     }
 }

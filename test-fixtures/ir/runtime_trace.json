@@ -15,12 +15,5 @@
       "callee": "java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)",
       "call_count": 1
     }
-  ],
-  "config_reads": [
-    {
-      "symbol_id":      "java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)",
-      "config_key":     "order.payment.provider",
-      "resolved_value": "stripe"
-    }
   ]
 }

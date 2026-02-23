@@ -193,8 +193,6 @@
     }
   ],
 
-  "config_reads": [],
-
   "runtime": {
     "observed_symbols": [],
     "observed_edges": []

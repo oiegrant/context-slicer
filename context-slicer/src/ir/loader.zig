@@ -86,11 +86,3 @@ test "loadStatic malformed JSON returns error (not panic)" {
     try std.testing.expect(std.meta.isError(result));
 }
 
-test "loadRuntime config_reads populated" {
-    const path = FIXTURE_DIR ++ "/runtime_trace.json";
-    var parsed = try loadRuntime(path, std.testing.allocator);
-    defer parsed.deinit();
-
-    try std.testing.expect(parsed.value.config_reads.len > 0);
-    try std.testing.expectEqualStrings("order.payment.provider", parsed.value.config_reads[0].config_key);
-}

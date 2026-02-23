@@ -29,7 +29,6 @@ pub const ValidationResult = struct {
     files: []const types.IrFile,
     symbols: []types.Symbol,
     call_edges: []types.CallEdge,
-    config_reads: []const types.ConfigRead,
     warnings: []ValidationWarning,
     _alloc: std.mem.Allocator,
 
@@ -122,7 +121,6 @@ pub fn validate(ir: types.IrRoot, allocator: std.mem.Allocator) !ValidationResul
         .files = ir.files,
         .symbols = try clean_symbols.toOwnedSlice(allocator),
         .call_edges = try clean_edges.toOwnedSlice(allocator),
-        .config_reads = ir.config_reads,
         .warnings = try warnings.toOwnedSlice(allocator),
         ._alloc = allocator,
     };
@@ -192,7 +190,6 @@ test "validate edge with non-existent callee is quarantined" {
         .files = &[_]types.IrFile{file},
         .symbols = &[_]types.Symbol{sym_a},
         .call_edges = &[_]types.CallEdge{bad_edge},
-        .config_reads = &[_]types.ConfigRead{},
         .runtime = .{ .observed_symbols = &[_]types.ObservedSymbol{}, .observed_edges = &[_]types.ObservedEdge{} },
     };
 

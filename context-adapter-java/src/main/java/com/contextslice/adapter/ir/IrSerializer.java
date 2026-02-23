@@ -42,11 +42,6 @@ public class IrSerializer {
             root.callEdges.sort(Comparator.comparing((IrModel.IrCallEdge e) -> e.caller)
                     .thenComparing(e -> e.callee));
         }
-        if (root.configReads != null) {
-            root.configReads = new java.util.ArrayList<>(root.configReads);
-            root.configReads.sort(Comparator.comparing((IrModel.IrConfigRead cr) -> cr.symbolId)
-                    .thenComparing(cr -> cr.configKey));
-        }
         if (root.files != null) {
             root.files = new java.util.ArrayList<>(root.files);
             root.files.sort(Comparator.comparing(f -> f.path));

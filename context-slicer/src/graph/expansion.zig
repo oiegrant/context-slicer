@@ -8,13 +8,10 @@ pub const Graph = graph_mod.Graph;
 pub const ExpandedGraph = struct {
     /// All symbols included after expansion (hot path + radius-1 neighbors).
     symbols: []types.Symbol,
-    /// Config file paths referenced by hot path symbols.
-    config_files: [][]const u8,
     _alloc: std.mem.Allocator,
 
     pub fn deinit(self: ExpandedGraph) void {
         self._alloc.free(self.symbols);
-        self._alloc.free(self.config_files);
     }
 };
 
@@ -29,14 +26,11 @@ pub const ExpandedGraph = struct {
 ///      interface name (i.e. other nodes that also call that interface).
 ///      (Conservative implementation: include all nodes whose out-edges
 ///      include any callee that is an interface symbol reachable from hot path.)
-///   4. Config expansion: for each config_read where symbol_id is in the
-///      hot path, include that config file path in expandedConfigFiles.
 ///
 /// Caller must call expanded.deinit() to free the result.
 pub fn expand(
     g: *const Graph,
     hot_path: []const types.Symbol,
-    config_reads: []const types.ConfigRead,
     file_map: *const std.StringHashMap([]const u8),
     allocator: std.mem.Allocator,
 ) !ExpandedGraph {
@@ -131,22 +125,10 @@ pub fn expand(
         }
     }
 
-    // 4. Config expansion
-    var config_files: std.ArrayListUnmanaged([]const u8) = .{};
-    errdefer config_files.deinit(allocator);
-
-    for (config_reads) |cr| {
-        if (hot_set.contains(cr.symbol_id)) {
-            // Find the file path for this symbol from file_map
-            if (file_map.get(cr.symbol_id)) |path| {
-                try config_files.append(allocator, path);
-            }
-        }
-    }
+    _ = file_map; // unused after config expansion removal
 
     return ExpandedGraph{
         .symbols = try symbols.toOwnedSlice(allocator),
-        .config_files = try config_files.toOwnedSlice(allocator),
         ._alloc = allocator,
     };
 }
@@ -187,7 +169,7 @@ test "radius-1: hot=[B], graph A→B→C→D; expanded includes A, B, C; not D" 
     var file_map = std.StringHashMap([]const u8).init(std.testing.allocator);
     defer file_map.deinit();
 
-    const expanded = try expand(&g, &hot, &[_]types.ConfigRead{}, &file_map, std.testing.allocator);
+    const expanded = try expand(&g, &hot, &file_map, std.testing.allocator);
     defer expanded.deinit();
 
     try std.testing.expect(containsId(expanded.symbols, "A"));
@@ -215,36 +197,13 @@ test "interface resolution: interface in hot path causes all callers to be added
     var file_map = std.StringHashMap([]const u8).init(std.testing.allocator);
     defer file_map.deinit();
 
-    const expanded = try expand(&g, &hot, &[_]types.ConfigRead{}, &file_map, std.testing.allocator);
+    const expanded = try expand(&g, &hot, &file_map, std.testing.allocator);
     defer expanded.deinit();
 
     try std.testing.expect(containsId(expanded.symbols, "OrderService"));
     try std.testing.expect(containsId(expanded.symbols, "StripeOrderService"));
     try std.testing.expect(containsId(expanded.symbols, "MockOrderService"));
     try std.testing.expect(containsId(expanded.symbols, "Controller"));
-}
-
-test "config reads for hot path symbol included in expandedConfigFiles" {
-    var g = Graph.init(std.testing.allocator);
-    defer g.deinit();
-
-    try g.addNode(makeSymbol("A", .class));
-    var file_map = std.StringHashMap([]const u8).init(std.testing.allocator);
-    defer file_map.deinit();
-    try file_map.put("A", "src/main/resources/application.yml");
-
-    const config_reads = [_]types.ConfigRead{.{
-        .symbol_id = "A",
-        .config_key = "app.timeout",
-        .resolved_value = "30",
-    }};
-
-    const hot = [_]types.Symbol{makeSymbol("A", .class)};
-    const expanded = try expand(&g, &hot, &config_reads, &file_map, std.testing.allocator);
-    defer expanded.deinit();
-
-    try std.testing.expectEqual(@as(usize, 1), expanded.config_files.len);
-    try std.testing.expectEqualStrings("src/main/resources/application.yml", expanded.config_files[0]);
 }
 
 test "hot path symbol not duplicated in expansion result" {
@@ -260,7 +219,7 @@ test "hot path symbol not duplicated in expansion result" {
     var file_map = std.StringHashMap([]const u8).init(std.testing.allocator);
     defer file_map.deinit();
 
-    const expanded = try expand(&g, &hot, &[_]types.ConfigRead{}, &file_map, std.testing.allocator);
+    const expanded = try expand(&g, &hot, &file_map, std.testing.allocator);
     defer expanded.deinit();
 
     // Count occurrences of "A" and "B" — each should appear exactly once
@@ -284,7 +243,7 @@ test "empty hot path returns empty expanded set" {
     var file_map = std.StringHashMap([]const u8).init(std.testing.allocator);
     defer file_map.deinit();
 
-    const expanded = try expand(&g, &hot, &[_]types.ConfigRead{}, &file_map, std.testing.allocator);
+    const expanded = try expand(&g, &hot, &file_map, std.testing.allocator);
     defer expanded.deinit();
 
     try std.testing.expectEqual(@as(usize, 0), expanded.symbols.len);

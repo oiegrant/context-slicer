@@ -21,7 +21,6 @@ public final class IrModel {
         @SerializedName("files")           public List<IrFile> files;
         @SerializedName("symbols")         public List<IrSymbol> symbols;
         @SerializedName("call_edges")      public List<IrCallEdge> callEdges;
-        @SerializedName("config_reads")    public List<IrConfigRead> configReads;
         @SerializedName("runtime")         public IrRuntime runtime;
     }
 
@@ -61,13 +60,6 @@ public final class IrModel {
         @SerializedName("static")           public boolean isStatic;
         @SerializedName("runtime_observed") public boolean runtimeObserved;
         @SerializedName("call_count")       public long callCount;
-    }
-
-    public static class IrConfigRead {
-        @SerializedName("symbol_id")      public String symbolId;
-        @SerializedName("config_key")     public String configKey;
-        @SerializedName("resolved_value") public String resolvedValue;
-        @SerializedName("source_file")    public String sourceFile;
     }
 
     public static class IrRuntime {
