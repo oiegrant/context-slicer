@@ -1,0 +1,200 @@
+{
+  "ir_version": "0.1",
+  "language": "java",
+  "repo_root": "REPO_ROOT_PLACEHOLDER",
+  "build_id": "fixture-v0.1",
+  "adapter_version": "0.1.0",
+
+  "scenario": {
+    "name": "submit-order",
+    "entry_points": ["java::com.contextslice.fixture.OrderController::createOrder(OrderRequest)"],
+    "run_args": [],
+    "config_files": ["application.yml"]
+  },
+
+  "files": [
+    { "id": "f01", "path": "src/main/java/com/contextslice/fixture/MockPaymentService.java",   "language": "java", "hash": "sha256:aabbcc" },
+    { "id": "f02", "path": "src/main/java/com/contextslice/fixture/OrderController.java",       "language": "java", "hash": "sha256:bbccdd" },
+    { "id": "f03", "path": "src/main/java/com/contextslice/fixture/OrderRequest.java",          "language": "java", "hash": "sha256:ccddee" },
+    { "id": "f04", "path": "src/main/java/com/contextslice/fixture/OrderResponse.java",         "language": "java", "hash": "sha256:ddeeff" },
+    { "id": "f05", "path": "src/main/java/com/contextslice/fixture/OrderService.java",          "language": "java", "hash": "sha256:eeffaa" },
+    { "id": "f06", "path": "src/main/java/com/contextslice/fixture/OrderServiceApplication.java","language": "java", "hash": "sha256:ffaabb" },
+    { "id": "f07", "path": "src/main/java/com/contextslice/fixture/PaymentRequest.java",        "language": "java", "hash": "sha256:aaccee" },
+    { "id": "f08", "path": "src/main/java/com/contextslice/fixture/PaymentResult.java",         "language": "java", "hash": "sha256:bbddff" },
+    { "id": "f09", "path": "src/main/java/com/contextslice/fixture/PaymentService.java",        "language": "java", "hash": "sha256:cceea1" },
+    { "id": "f10", "path": "src/main/java/com/contextslice/fixture/StripeOrderService.java",   "language": "java", "hash": "sha256:ddffa2" },
+    { "id": "f11", "path": "src/main/java/com/contextslice/fixture/StripePaymentService.java", "language": "java", "hash": "sha256:eea1b3" }
+  ],
+
+  "symbols": [
+    {
+      "id": "java::com.contextslice.fixture.MockPaymentService",
+      "kind": "class", "name": "MockPaymentService", "language": "java",
+      "file_id": "f01", "line_start": 9, "line_end": 20,
+      "visibility": "public", "container": null,
+      "annotations": ["@Service", "@Profile"],
+      "is_entry_point": false, "is_framework": true, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.MockPaymentService::charge(PaymentRequest)",
+      "kind": "method", "name": "charge", "language": "java",
+      "file_id": "f01", "line_start": 15, "line_end": 18,
+      "visibility": "public", "container": "java::com.contextslice.fixture.MockPaymentService",
+      "annotations": ["@Override"],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.OrderController",
+      "kind": "class", "name": "OrderController", "language": "java",
+      "file_id": "f02", "line_start": 9, "line_end": 22,
+      "visibility": "public", "container": null,
+      "annotations": ["@RestController", "@RequestMapping"],
+      "is_entry_point": false, "is_framework": true, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.OrderController::createOrder(OrderRequest)",
+      "kind": "method", "name": "createOrder", "language": "java",
+      "file_id": "f02", "line_start": 15, "line_end": 20,
+      "visibility": "public", "container": "java::com.contextslice.fixture.OrderController",
+      "annotations": ["@PostMapping"],
+      "is_entry_point": true, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.OrderRequest",
+      "kind": "class", "name": "OrderRequest", "language": "java",
+      "file_id": "f03", "line_start": 3, "line_end": 26,
+      "visibility": "public", "container": null,
+      "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.OrderResponse",
+      "kind": "class", "name": "OrderResponse", "language": "java",
+      "file_id": "f04", "line_start": 3, "line_end": 18,
+      "visibility": "public", "container": null,
+      "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.OrderService",
+      "kind": "interface", "name": "OrderService", "language": "java",
+      "file_id": "f05", "line_start": 6, "line_end": 13,
+      "visibility": "public", "container": null,
+      "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.OrderService::createOrder(OrderRequest)",
+      "kind": "method", "name": "createOrder", "language": "java",
+      "file_id": "f05", "line_start": 12, "line_end": 12,
+      "visibility": "public", "container": "java::com.contextslice.fixture.OrderService",
+      "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.OrderServiceApplication",
+      "kind": "class", "name": "OrderServiceApplication", "language": "java",
+      "file_id": "f06", "line_start": 7, "line_end": 12,
+      "visibility": "public", "container": null,
+      "annotations": ["@SpringBootApplication"],
+      "is_entry_point": false, "is_framework": true, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.PaymentRequest",
+      "kind": "class", "name": "PaymentRequest", "language": "java",
+      "file_id": "f07", "line_start": 3, "line_end": 22,
+      "visibility": "public", "container": null,
+      "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.PaymentResult",
+      "kind": "class", "name": "PaymentResult", "language": "java",
+      "file_id": "f08", "line_start": 3, "line_end": 20,
+      "visibility": "public", "container": null,
+      "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.PaymentService",
+      "kind": "interface", "name": "PaymentService", "language": "java",
+      "file_id": "f09", "line_start": 6, "line_end": 12,
+      "visibility": "public", "container": null,
+      "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.PaymentService::charge(PaymentRequest)",
+      "kind": "method", "name": "charge", "language": "java",
+      "file_id": "f09", "line_start": 11, "line_end": 11,
+      "visibility": "public", "container": "java::com.contextslice.fixture.PaymentService",
+      "annotations": [],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.StripeOrderService",
+      "kind": "class", "name": "StripeOrderService", "language": "java",
+      "file_id": "f10", "line_start": 9, "line_end": 32,
+      "visibility": "public", "container": null,
+      "annotations": ["@Service"],
+      "is_entry_point": false, "is_framework": true, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)",
+      "kind": "method", "name": "createOrder", "language": "java",
+      "file_id": "f10", "line_start": 17, "line_end": 31,
+      "visibility": "public", "container": "java::com.contextslice.fixture.StripeOrderService",
+      "annotations": ["@Override", "@Transactional"],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.StripePaymentService",
+      "kind": "class", "name": "StripePaymentService", "language": "java",
+      "file_id": "f11", "line_start": 9, "line_end": 28,
+      "visibility": "public", "container": null,
+      "annotations": ["@Service"],
+      "is_entry_point": false, "is_framework": true, "is_generated": false
+    },
+    {
+      "id": "java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)",
+      "kind": "method", "name": "charge", "language": "java",
+      "file_id": "f11", "line_start": 16, "line_end": 26,
+      "visibility": "public", "container": "java::com.contextslice.fixture.StripePaymentService",
+      "annotations": ["@Override"],
+      "is_entry_point": false, "is_framework": false, "is_generated": false
+    }
+  ],
+
+  "call_edges": [
+    {
+      "caller": "java::com.contextslice.fixture.OrderController::createOrder(OrderRequest)",
+      "callee": "java::com.contextslice.fixture.OrderService::createOrder(OrderRequest)",
+      "static": true, "runtime_observed": false, "call_count": 0
+    },
+    {
+      "caller": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)",
+      "callee": "java::com.contextslice.fixture.OrderResponse",
+      "static": true, "runtime_observed": false, "call_count": 0
+    },
+    {
+      "caller": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)",
+      "callee": "java::com.contextslice.fixture.PaymentRequest",
+      "static": true, "runtime_observed": false, "call_count": 0
+    },
+    {
+      "caller": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)",
+      "callee": "java::com.contextslice.fixture.PaymentService::charge(PaymentRequest)",
+      "static": true, "runtime_observed": false, "call_count": 0
+    },
+    {
+      "caller": "java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)",
+      "callee": "java::com.contextslice.fixture.PaymentResult",
+      "static": true, "runtime_observed": false, "call_count": 0
+    }
+  ],
+
+  "runtime": {
+    "observed_symbols": [],
+    "observed_edges": []
+  }
+}

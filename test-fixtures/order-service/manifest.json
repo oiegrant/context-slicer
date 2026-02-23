@@ -1,0 +1,12 @@
+{
+  "scenario_name": "submit-order",
+  "entry_points": [],
+  "run_args": [],
+  "config_files": [
+    "src/main/resources/application.yml"
+  ],
+  "output_dir": "/Users/grantoie/Documents/Code/repos/context-slicer/test-fixtures/order-service/.context-slice",
+  "namespace": "com.contextslice.fixture.",
+  "server_port": 8080,
+  "run_script": "curl -s -X POST http://localhost:8080/orders -H 'Content-Type: application/json' -d '{\"amount\": 100, \"customerId\": \"cust-1\"}'"
+}

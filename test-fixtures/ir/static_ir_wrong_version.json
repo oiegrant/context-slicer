@@ -1,0 +1,12 @@
+{
+  "ir_version": "99.0",
+  "language": "java",
+  "repo_root": "/tmp/fixture",
+  "build_id": "test",
+  "adapter_version": "0.1.0",
+  "scenario": { "name": "test", "entry_points": [], "run_args": [], "config_files": [] },
+  "files": [],
+  "symbols": [],
+  "call_edges": [],
+  "runtime": { "observed_symbols": [], "observed_edges": [] }
+}

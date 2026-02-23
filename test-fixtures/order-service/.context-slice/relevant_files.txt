@@ -1,0 +1,9 @@
+src/main/java/com/contextslice/fixture/OrderController.java
+src/main/java/com/contextslice/fixture/OrderRequest.java
+src/main/java/com/contextslice/fixture/OrderResponse.java
+src/main/java/com/contextslice/fixture/OrderService.java
+src/main/java/com/contextslice/fixture/PaymentRequest.java
+src/main/java/com/contextslice/fixture/PaymentResult.java
+src/main/java/com/contextslice/fixture/PaymentService.java
+src/main/java/com/contextslice/fixture/StripeOrderService.java
+src/main/java/com/contextslice/fixture/StripePaymentService.java

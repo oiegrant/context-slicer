@@ -1,0 +1,19 @@
+{
+  "observed_symbols": [
+    { "symbol_id": "java::com.contextslice.fixture.OrderController::createOrder(OrderRequest)",       "call_count": 1 },
+    { "symbol_id": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)",   "call_count": 1 },
+    { "symbol_id": "java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)",    "call_count": 1 }
+  ],
+  "observed_edges": [
+    {
+      "caller": "java::com.contextslice.fixture.OrderController::createOrder(OrderRequest)",
+      "callee": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)",
+      "call_count": 1
+    },
+    {
+      "caller": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)",
+      "callee": "java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)",
+      "call_count": 1
+    }
+  ]
+}
