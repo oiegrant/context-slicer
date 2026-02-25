@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.contextslice.agent.AgentBootstrapTest" time="0.005" tests="5" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.contextslice.agent.AgentBootstrapTest" time="0.015" tests="13" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="25"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -12,7 +12,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home/lib"/>
-    <property name="sun.java.command" value="/Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/target/surefire/surefirebooter-20260222194451669_3.jar /Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/target/surefire 2026-02-22T19-44-51_619-jvmRun1 surefire-20260222194451669_1tmp surefire_0-20260222194451669_2tmp"/>
+    <property name="sun.java.command" value="/Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/target/surefire/surefirebooter-20260224220029530_3.jar /Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/target/surefire 2026-02-24T22-00-29_427-jvmRun1 surefire-20260224220029530_1tmp surefire_0-20260224220029530_2tmp"/>
     <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="/Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/target/test-classes:/Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/target/classes:/Users/grantoie/.m2/repository/net/bytebuddy/byte-buddy/1.14.18/byte-buddy-1.14.18.jar:/Users/grantoie/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.18/byte-buddy-agent-1.14.18.jar:/Users/grantoie/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:/Users/grantoie/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/Users/grantoie/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/grantoie/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/grantoie/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/grantoie/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/grantoie/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/Users/grantoie/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/grantoie/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:"/>
@@ -29,7 +29,7 @@
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="apple.awt.application.name" value="ForkedBooter"/>
-    <property name="surefire.real.class.path" value="/Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/target/surefire/surefirebooter-20260222194451669_3.jar"/>
+    <property name="surefire.real.class.path" value="/Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/target/surefire/surefirebooter-20260224220029530_3.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.runtime.version" value="25.0.2"/>
@@ -59,9 +59,17 @@
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.class.version" value="69.0"/>
   </properties>
-  <testcase name="parseArgsDefaults" classname="com.contextslice.agent.AgentBootstrapTest" time="0.002"/>
+  <testcase name="accessorIsTransformsEnabledFalseWhenDisabled" classname="com.contextslice.agent.AgentBootstrapTest" time="0.006"/>
+  <testcase name="parseArgsDefaults" classname="com.contextslice.agent.AgentBootstrapTest" time="0.001"/>
+  <testcase name="parseArgsTransformsFalse" classname="com.contextslice.agent.AgentBootstrapTest" time="0.001"/>
+  <testcase name="parseArgsMaxElements" classname="com.contextslice.agent.AgentBootstrapTest" time="0.0"/>
+  <testcase name="accessorsReturnDefaultsWhenConfigNull" classname="com.contextslice.agent.AgentBootstrapTest" time="0.0"/>
+  <testcase name="parseArgsAllTransformArgs" classname="com.contextslice.agent.AgentBootstrapTest" time="0.001"/>
   <testcase name="parseArgsBlankString" classname="com.contextslice.agent.AgentBootstrapTest" time="0.001"/>
-  <testcase name="parseArgsNamespace" classname="com.contextslice.agent.AgentBootstrapTest" time="0.0"/>
-  <testcase name="parseArgsBoth" classname="com.contextslice.agent.AgentBootstrapTest" time="0.0"/>
-  <testcase name="parseArgsOutput" classname="com.contextslice.agent.AgentBootstrapTest" time="0.001"/>
+  <testcase name="parseArgsDepth" classname="com.contextslice.agent.AgentBootstrapTest" time="0.001"/>
+  <testcase name="parseArgsNamespace" classname="com.contextslice.agent.AgentBootstrapTest" time="0.001"/>
+  <testcase name="accessorsReflectInstalledConfig" classname="com.contextslice.agent.AgentBootstrapTest" time="0.0"/>
+  <testcase name="parseArgsDefaultsIncludeTransforms" classname="com.contextslice.agent.AgentBootstrapTest" time="0.0"/>
+  <testcase name="parseArgsBoth" classname="com.contextslice.agent.AgentBootstrapTest" time="0.001"/>
+  <testcase name="parseArgsOutput" classname="com.contextslice.agent.AgentBootstrapTest" time="0.0"/>
 </testsuite>

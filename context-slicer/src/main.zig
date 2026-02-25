@@ -28,6 +28,7 @@ comptime {
     _ = @import("packager/architecture_writer.zig");
     _ = @import("packager/packager.zig");
     _ = @import("cli/cli.zig");
+    _ = @import("cli/config.zig");
     _ = @import("orchestrator/detector.zig");
     _ = @import("orchestrator/manifest.zig");
     _ = @import("orchestrator/subprocess.zig");
@@ -77,7 +78,7 @@ pub fn main() !void {
                 switch (err) {
                     error.HelpRequested => std.process.exit(0),
                     error.MissingScenarioName => stderr.writeAll(
-                        "Usage: context-slicer record <scenario> [--config <file>] [--args \"<run-args>\"]\n",
+                        "Usage: context-slicer record <scenario> [--args \"<run-args>\"]\n",
                     ) catch {},
                     else => stderr.writeAll("record: argument error\n") catch {},
                 }

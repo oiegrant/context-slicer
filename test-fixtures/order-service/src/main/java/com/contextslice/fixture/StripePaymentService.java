@@ -14,10 +14,11 @@ public class StripePaymentService implements PaymentService {
     public PaymentResult charge(PaymentRequest request) {
         String provider = environment.getProperty("order.payment.provider");
         if (!"stripe".equals(provider)) {
-            return new PaymentResult(false, null, "Provider mismatch: expected stripe, got " + provider);
+            return new PaymentResult(false, null, null, "Provider mismatch: expected stripe, got " + provider);
         }
         // Simulate successful Stripe charge
         String transactionId = "stripe-txn-" + System.currentTimeMillis();
-        return new PaymentResult(true, transactionId, null);
+        String chargeId = "ch_" + System.currentTimeMillis();
+        return new PaymentResult(true, transactionId, chargeId, null);
     }
 }

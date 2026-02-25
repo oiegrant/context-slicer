@@ -60,7 +60,6 @@ cd /path/to/your/java-project
 context-slicer record submit-order \
   --adapter-jar /path/to/context-adapter-java.jar \
   --agent-jar   /path/to/context-agent-java.jar \
-  --config      src/main/resources/application.yml \
   --namespace   com.example. \
   --run-script  "curl -s -X POST http://localhost:8080/orders \
     -H 'Content-Type: application/json' \
@@ -71,12 +70,9 @@ context-slicer record submit-order \
 
 | Flag | Required | Description |
 |---|---|---|
-| `--adapter-jar <path>` | Yes | Path to `context-adapter-java.jar` |
-| `--agent-jar <path>` | Yes | Path to `context-agent-java.jar` |
 | `--run-script "<cmd>"` | Recommended | Shell command to trigger the scenario (e.g. a `curl` invocation) |
 | `--namespace <prefix>` | Recommended | Java package prefix to scope analysis (e.g. `com.example.`) |
 | `--port <N>` | No | Port the target server listens on |
-| `--config <file>` | No | Config file to pass to the adapter |
 | `--args "<run-args>"` | No | Extra JVM arguments to pass to the target application |
 
 What happens:

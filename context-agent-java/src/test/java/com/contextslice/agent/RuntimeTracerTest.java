@@ -80,6 +80,57 @@ class RuntimeTracerTest {
         assertFalse(otherThreadSeesValue.get(), "Thread should not see main thread's stack");
     }
 
+    // --- Transform recording ---
+
+    @Test
+    void recordTransformFirstInvocationStored() {
+        TransformRecord r1 = new TransformRecord();
+        r1.symbolId = "A";
+        TransformRecord r2 = new TransformRecord();
+        r2.symbolId = "A";
+        RuntimeTracer.recordTransform("A", r1);
+        RuntimeTracer.recordTransform("A", r2);
+        assertSame(r1, RuntimeTracer.transformRecords.get("A"), "Only first record should be stored");
+    }
+
+    @Test
+    void recordTransformConcurrentlyStoresExactlyOne() throws InterruptedException {
+        int threadCount = 50;
+        CountDownLatch start = new CountDownLatch(1);
+        CountDownLatch done = new CountDownLatch(threadCount);
+        ExecutorService pool = Executors.newFixedThreadPool(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            pool.submit(() -> {
+                try {
+                    start.await();
+                    TransformRecord r = new TransformRecord();
+                    r.symbolId = "A";
+                    RuntimeTracer.recordTransform("A", r);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    done.countDown();
+                }
+            });
+        }
+        start.countDown();
+        done.await(5, TimeUnit.SECONDS);
+        pool.shutdown();
+
+        assertEquals(1, RuntimeTracer.transformRecords.size());
+    }
+
+    @Test
+    void resetClearsTransformRecords() {
+        TransformRecord r = new TransformRecord();
+        r.symbolId = "A";
+        RuntimeTracer.recordTransform("A", r);
+        assertFalse(RuntimeTracer.transformRecords.isEmpty());
+        RuntimeTracer.reset();
+        assertTrue(RuntimeTracer.transformRecords.isEmpty());
+    }
+
     // --- Concurrency ---
 
     @Test

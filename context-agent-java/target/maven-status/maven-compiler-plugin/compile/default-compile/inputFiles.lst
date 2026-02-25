@@ -1,5 +1,8 @@
 /Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/src/main/java/com/contextslice/agent/AgentBootstrap.java
 /Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/src/main/java/com/contextslice/agent/MethodAdvice.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/src/main/java/com/contextslice/agent/ParameterSerializer.java
 /Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/src/main/java/com/contextslice/agent/RuntimeTrace.java
 /Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/src/main/java/com/contextslice/agent/RuntimeTracer.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/src/main/java/com/contextslice/agent/SerializerConfig.java
 /Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/src/main/java/com/contextslice/agent/ShutdownHook.java
+/Users/grantoie/Documents/Code/repos/context-slicer/context-agent-java/src/main/java/com/contextslice/agent/TransformRecord.java

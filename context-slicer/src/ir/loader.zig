@@ -65,6 +65,35 @@ test "loadStatic file not found returns error" {
     try std.testing.expectError(error.FileNotFound, result);
 }
 
+test "loadRuntime parses method_transforms from fixture" {
+    const path = FIXTURE_DIR ++ "/runtime_trace_with_transforms.json";
+    var parsed = try loadRuntime(path, std.testing.allocator);
+    defer parsed.deinit();
+
+    try std.testing.expectEqual(@as(usize, 2), parsed.value.method_transforms.len);
+
+    // First transform: StripeOrderService.createOrder
+    const mt0 = parsed.value.method_transforms[0];
+    try std.testing.expect(std.mem.indexOf(u8, mt0.symbol_id, "StripeOrderService") != null);
+    try std.testing.expectEqual(@as(usize, 1), mt0.parameters.len);
+    try std.testing.expect(mt0.parameters[0].mutated);
+    try std.testing.expectEqual(@as(usize, 2), mt0.parameters[0].changed_fields.len);
+    try std.testing.expectEqualStrings("orderId", mt0.parameters[0].changed_fields[0].field);
+    try std.testing.expectEqualStrings("null", mt0.parameters[0].changed_fields[0].before);
+    try std.testing.expectEqualStrings("ord-abc123", mt0.parameters[0].changed_fields[0].after);
+    try std.testing.expect(mt0.return_type != null);
+    try std.testing.expect(mt0.return_value != null);
+}
+
+test "loadRuntime without method_transforms parses successfully (backwards compat)" {
+    const path = FIXTURE_DIR ++ "/runtime_trace.json";
+    var parsed = try loadRuntime(path, std.testing.allocator);
+    defer parsed.deinit();
+
+    // Old trace has no method_transforms — should default to empty slice
+    try std.testing.expectEqual(@as(usize, 0), parsed.value.method_transforms.len);
+}
+
 test "loadStatic malformed JSON returns error (not panic)" {
     // Write a temp file with malformed JSON
     const tmp = std.testing.tmpDir(.{});

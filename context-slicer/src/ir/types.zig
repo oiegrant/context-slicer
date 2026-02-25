@@ -86,10 +86,38 @@ pub const IrRoot = struct {
     runtime: RuntimeEntry,
 };
 
+// ---------------------------------------------------------------------------
+// Phase 13: Data Transform types
+// ---------------------------------------------------------------------------
+
+/// A single field-level diff between entry and exit snapshots.
+pub const FieldDiff = struct {
+    field: []const u8,
+    before: []const u8,
+    after: []const u8,
+};
+
+/// Transform data for one parameter of a method invocation.
+pub const ParameterTransform = struct {
+    name: []const u8,
+    type_name: []const u8 = "",
+    mutated: bool,
+    changed_fields: []const FieldDiff,
+};
+
+/// Transform data for one method invocation (first invocation only).
+pub const MethodTransform = struct {
+    symbol_id: []const u8,
+    parameters: []const ParameterTransform,
+    return_value: ?[]const u8 = null,
+    return_type: ?[]const u8 = null,
+};
+
 /// Top-level structure of runtime_trace.json.
 pub const RuntimeTrace = struct {
     observed_symbols: []const ObservedSymbol,
     observed_edges: []const ObservedEdge,
+    method_transforms: []const MethodTransform = &.{},  // optional — absent in old traces
 };
 
 // ---------------------------------------------------------------------------
@@ -170,4 +198,32 @@ test "CallEdge static field accessible via @\"static\"" {
     };
     try std.testing.expect(e.@"static");
     try std.testing.expectEqual(@as(u32, 3), e.call_count);
+}
+
+test "can construct MethodTransform with all fields" {
+    const diff = FieldDiff{ .field = "orderId", .before = "null", .after = "ord-456" };
+    const param = ParameterTransform{
+        .name = "request",
+        .type_name = "OrderRequest",
+        .mutated = true,
+        .changed_fields = &[_]FieldDiff{diff},
+    };
+    const mt = MethodTransform{
+        .symbol_id = "java::com.example.Foo::createOrder(OrderRequest)",
+        .parameters = &[_]ParameterTransform{param},
+        .return_value = "ord-456",
+        .return_type = "OrderResponse",
+    };
+    try std.testing.expectEqualStrings("java::com.example.Foo::createOrder(OrderRequest)", mt.symbol_id);
+    try std.testing.expectEqual(@as(usize, 1), mt.parameters.len);
+    try std.testing.expect(mt.parameters[0].mutated);
+    try std.testing.expectEqualStrings("orderId", mt.parameters[0].changed_fields[0].field);
+}
+
+test "RuntimeTrace with no method_transforms defaults to empty slice" {
+    const rt = RuntimeTrace{
+        .observed_symbols = &[_]ObservedSymbol{},
+        .observed_edges = &[_]ObservedEdge{},
+    };
+    try std.testing.expectEqual(@as(usize, 0), rt.method_transforms.len);
 }

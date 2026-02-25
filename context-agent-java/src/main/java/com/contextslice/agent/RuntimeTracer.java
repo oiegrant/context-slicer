@@ -27,6 +27,11 @@ public final class RuntimeTracer {
     static final ConcurrentHashMap<EdgeKey, LongAdder> edgeCounts =
         new ConcurrentHashMap<>();
 
+    // First-invocation transform records: symbolId -> TransformRecord
+    // putIfAbsent semantics ensure only the first invocation is stored.
+    static final ConcurrentHashMap<String, TransformRecord> transformRecords =
+        new ConcurrentHashMap<>();
+
     /** Immutable key for a directed call edge. Java records provide correct equals/hashCode. */
     record EdgeKey(String caller, String callee) {}
 
@@ -61,6 +66,29 @@ public final class RuntimeTracer {
     }
 
     // -----------------------------------------------------------------------
+    // Transform recording
+    // -----------------------------------------------------------------------
+
+    /**
+     * Records a transform for a symbol.
+     * Uses putIfAbsent so only the first invocation's transform is stored.
+     */
+    public static void recordTransform(String symbolId, TransformRecord record) {
+        transformRecords.putIfAbsent(symbolId, record);
+    }
+
+    /**
+     * Returns true if a transform has already been recorded for this symbol.
+     *
+     * Public accessor used by MethodAdvice (inlined into instrumented classes).
+     * Direct field access to package-private {@code transformRecords} is illegal
+     * from inlined bytecode running in a different package/class-loader context.
+     */
+    public static boolean hasTransformRecorded(String symbolId) {
+        return transformRecords.containsKey(symbolId);
+    }
+
+    // -----------------------------------------------------------------------
     // Reset (for testing)
     // -----------------------------------------------------------------------
 
@@ -68,5 +96,6 @@ public final class RuntimeTracer {
         stack.get().clear();
         methodCounts.clear();
         edgeCounts.clear();
+        transformRecords.clear();
     }
 }

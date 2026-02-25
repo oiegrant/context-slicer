@@ -15,6 +15,9 @@ public class RuntimeTrace {
     @SerializedName("observed_edges")
     public List<ObservedEdge> observedEdges;
 
+    @SerializedName("method_transforms")
+    public List<TransformRecord> methodTransforms;
+
     public static class ObservedSymbol {
         @SerializedName("symbol_id")  public String symbolId;
         @SerializedName("call_count") public long callCount;

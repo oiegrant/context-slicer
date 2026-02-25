@@ -56,6 +56,11 @@ public class ShutdownHook implements Runnable {
                               .thenComparing(e -> e.callee))
             .collect(Collectors.toList());
 
+        // Method transforms — sorted by symbolId for determinism
+        trace.methodTransforms = RuntimeTracer.transformRecords.values().stream()
+            .sorted(Comparator.comparing(r -> r.symbolId))
+            .collect(Collectors.toList());
+
         return trace;
     }
 

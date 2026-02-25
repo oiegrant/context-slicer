@@ -10,12 +10,16 @@ pub const Slice = struct {
     ordered_symbols: []types.Symbol,
     relevant_file_paths: [][]const u8,
     call_graph_edges: []filter.FilteredEdge,
+    /// Per-symbol transform annotations — parallel array to ordered_symbols.
+    /// Entry is null if no transform was recorded for that symbol.
+    transforms: []?types.MethodTransform,
     _alloc: std.mem.Allocator,
 
     pub fn deinit(self: Slice) void {
         self._alloc.free(self.ordered_symbols);
         self._alloc.free(self.relevant_file_paths);
         self._alloc.free(self.call_graph_edges);
+        self._alloc.free(self.transforms);
     }
 };
 
@@ -155,10 +159,21 @@ pub fn compress(
         }
     }
 
+    // Build parallel transforms array (nullable, one entry per ordered symbol)
+    const ordered_slice = try ordered.toOwnedSlice(allocator);
+    errdefer allocator.free(ordered_slice);
+
+    var transforms_list = try allocator.alloc(?types.MethodTransform, ordered_slice.len);
+    errdefer allocator.free(transforms_list);
+    for (ordered_slice, 0..) |sym, i| {
+        transforms_list[i] = ir.transforms.get(sym.id);
+    }
+
     return Slice{
-        .ordered_symbols = try ordered.toOwnedSlice(allocator),
+        .ordered_symbols = ordered_slice,
         .relevant_file_paths = try file_paths.toOwnedSlice(allocator),
         .call_graph_edges = output_edges,
+        .transforms = transforms_list,
         ._alloc = allocator,
     };
 }

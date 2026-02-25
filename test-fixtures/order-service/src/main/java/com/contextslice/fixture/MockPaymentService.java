@@ -13,6 +13,6 @@ public class MockPaymentService implements PaymentService {
 
     @Override
     public PaymentResult charge(PaymentRequest request) {
-        return new PaymentResult(true, "mock-txn-001", null);
+        return new PaymentResult(true, "mock-txn-001", "ch_mock001", null);
     }
 }

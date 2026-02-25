@@ -3,11 +3,12 @@ const std = @import("std");
 /// Parsed arguments for the `record` subcommand.
 pub const RecordArgs = struct {
     scenario_name: []const u8,
-    config_file: ?[]const u8,
     run_args: []const []const u8,
     run_script: ?[]const u8,
     namespace: ?[]const u8,
     server_port: ?i64,
+    /// When false, transform capture is disabled (--no-transforms flag).
+    transforms_enabled: bool = true,
 };
 
 fn printRecordUsage() void {
@@ -25,15 +26,15 @@ fn printRecordUsage() void {
         \\  --run-script "<command>"    Shell command to trigger the scenario (e.g. a curl invocation)
         \\  --namespace <prefix>        Java package prefix to filter classes (e.g. com.example.)
         \\  --port <N>                  Port the target server listens on
-        \\  --config <file>             Config file to pass to the adapter
         \\  --args "<run-args>"         Extra arguments to pass to the target application
+        \\  --no-transforms             Disable data transform capture (faster, but no field-level diffs)
         \\  --help                      Show this help message
         \\
     ) catch {};
 }
 
 /// Parse `record` subcommand arguments.
-/// Expected format: record <scenario_name> [--config <file>] [--args "<run-args>"]
+/// Expected format: record <scenario_name> [--args "<run-args>"]
 ///
 /// Returns `error.HelpRequested` if `--help` or `-h` is present.
 /// Returns `error.MissingScenarioName` if no positional arg is given.
@@ -55,20 +56,16 @@ pub fn parse(
     }
 
     const scenario_name = args[0];
-    var config_file: ?[]const u8 = null;
     var run_args: []const []const u8 = &[_][]const u8{};
     var run_script: ?[]const u8 = null;
     var namespace: ?[]const u8 = null;
     var server_port: ?i64 = null;
+    var transforms_enabled: bool = true;
 
     var i: usize = 1;
     while (i < args.len) {
         const arg = args[i];
-        if (std.mem.eql(u8, arg, "--config")) {
-            i += 1;
-            if (i >= args.len) return error.MissingFlagValue;
-            config_file = args[i];
-        } else if (std.mem.eql(u8, arg, "--args")) {
+        if (std.mem.eql(u8, arg, "--args")) {
             i += 1;
             if (i >= args.len) return error.MissingFlagValue;
             // Split the run-args string on spaces (simple split, no quoting support)
@@ -92,6 +89,8 @@ pub fn parse(
             i += 1;
             if (i >= args.len) return error.MissingFlagValue;
             server_port = try std.fmt.parseInt(i64, args[i], 10);
+        } else if (std.mem.eql(u8, arg, "--no-transforms")) {
+            transforms_enabled = false;
         } else if (std.mem.startsWith(u8, arg, "--")) {
             return error.UnknownFlag;
         }
@@ -100,11 +99,11 @@ pub fn parse(
 
     return RecordArgs{
         .scenario_name = scenario_name,
-        .config_file = config_file,
         .run_args = run_args,
         .run_script = run_script,
         .namespace = namespace,
         .server_port = server_port,
+        .transforms_enabled = transforms_enabled,
     };
 }
 
@@ -112,14 +111,12 @@ pub fn parse(
 // Tests
 // ---------------------------------------------------------------------------
 
-test "parse record: scenario name + config" {
-    const args = [_][]const u8{ "submit-order", "--config", "app.yml" };
+test "parse record: scenario name only" {
+    const args = [_][]const u8{"submit-order"};
     const result = try parse(&args, std.testing.allocator);
     defer if (result.run_args.len > 0) std.testing.allocator.free(result.run_args);
 
     try std.testing.expectEqualStrings("submit-order", result.scenario_name);
-    try std.testing.expect(result.config_file != null);
-    try std.testing.expectEqualStrings("app.yml", result.config_file.?);
     try std.testing.expect(result.run_script == null);
     try std.testing.expect(result.namespace == null);
     try std.testing.expect(result.server_port == null);
@@ -163,4 +160,26 @@ test "parse record: --port invalid value returns error" {
     const args = [_][]const u8{ "submit-order", "--port", "notanumber" };
     const result = parse(&args, std.testing.allocator);
     try std.testing.expectError(error.InvalidCharacter, result);
+}
+
+test "parse record: transforms_enabled defaults to true" {
+    const args = [_][]const u8{"submit-order"};
+    const result = try parse(&args, std.testing.allocator);
+    defer if (result.run_args.len > 0) std.testing.allocator.free(result.run_args);
+    try std.testing.expect(result.transforms_enabled);
+}
+
+test "parse record: --no-transforms sets transforms_enabled false" {
+    const args = [_][]const u8{ "submit-order", "--no-transforms" };
+    const result = try parse(&args, std.testing.allocator);
+    defer if (result.run_args.len > 0) std.testing.allocator.free(result.run_args);
+    try std.testing.expect(!result.transforms_enabled);
+}
+
+test "parse record: --no-transforms combined with other flags" {
+    const args = [_][]const u8{ "submit-order", "--no-transforms", "--namespace", "com.example" };
+    const result = try parse(&args, std.testing.allocator);
+    defer if (result.run_args.len > 0) std.testing.allocator.free(result.run_args);
+    try std.testing.expect(!result.transforms_enabled);
+    try std.testing.expectEqualStrings("com.example", result.namespace.?);
 }

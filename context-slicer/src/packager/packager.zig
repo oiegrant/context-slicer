@@ -205,6 +205,7 @@ fn emptySlice() compressor.Slice {
         .ordered_symbols = &[_]types.Symbol{},
         .relevant_file_paths = &[_][]const u8{},
         .call_graph_edges = &[_]filter.FilteredEdge{},
+        .transforms = &[_]?types.MethodTransform{},
         ._alloc = std.testing.allocator,
     };
 }

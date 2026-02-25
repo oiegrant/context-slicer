@@ -14,6 +14,10 @@ pub const Manifest = struct {
     namespace: ?[]const u8 = null,
     server_port: ?i64 = null,
     run_script: ?[]const u8 = null,
+    // Transform capture config (Phase 13 / DT-011)
+    transforms_enabled: bool = true,
+    transform_depth: u32 = 2,
+    transform_max_collection_elements: u32 = 3,
 };
 
 /// Serializes the manifest to `<dir>/manifest.json`.
@@ -108,6 +112,55 @@ test "manifest: JSON has expected keys" {
     try std.testing.expect(std.mem.indexOf(u8, content, "run_args") != null);
     try std.testing.expect(std.mem.indexOf(u8, content, "config_files") != null);
     try std.testing.expect(std.mem.indexOf(u8, content, "output_dir") != null);
+}
+
+test "manifest: transform fields have defaults" {
+    const tmp = std.testing.tmpDir(.{});
+    defer @constCast(&tmp).cleanup();
+
+    var path_buf: [std.fs.max_path_bytes]u8 = undefined;
+    const tmp_path = try tmp.dir.realpath(".", &path_buf);
+
+    const m = Manifest{
+        .scenario_name = "test",
+        .entry_points = &.{},
+        .run_args = &.{},
+        .config_files = &.{},
+        .output_dir = tmp_path,
+    };
+    try write(m, tmp_path, std.testing.allocator);
+    var parsed = try read(tmp_path, std.testing.allocator);
+    defer parsed.deinit();
+
+    try std.testing.expect(parsed.value.transforms_enabled);
+    try std.testing.expectEqual(@as(u32, 2), parsed.value.transform_depth);
+    try std.testing.expectEqual(@as(u32, 3), parsed.value.transform_max_collection_elements);
+}
+
+test "manifest: transform fields round-trip" {
+    const tmp = std.testing.tmpDir(.{});
+    defer @constCast(&tmp).cleanup();
+
+    var path_buf: [std.fs.max_path_bytes]u8 = undefined;
+    const tmp_path = try tmp.dir.realpath(".", &path_buf);
+
+    const m = Manifest{
+        .scenario_name = "test",
+        .entry_points = &.{},
+        .run_args = &.{},
+        .config_files = &.{},
+        .output_dir = tmp_path,
+        .transforms_enabled = false,
+        .transform_depth = 3,
+        .transform_max_collection_elements = 5,
+    };
+    try write(m, tmp_path, std.testing.allocator);
+    var parsed = try read(tmp_path, std.testing.allocator);
+    defer parsed.deinit();
+
+    try std.testing.expect(!parsed.value.transforms_enabled);
+    try std.testing.expectEqual(@as(u32, 3), parsed.value.transform_depth);
+    try std.testing.expectEqual(@as(u32, 5), parsed.value.transform_max_collection_elements);
 }
 
 test "manifest: write creates output_dir if absent" {

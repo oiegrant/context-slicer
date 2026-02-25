@@ -1,3 +1,10 @@
-com/contextslice/agent/AgentBootstrapTest.class
+com/contextslice/agent/ParameterSerializerTest$Deep.class
+com/contextslice/agent/ParameterSerializerTest$OrderRequest.class
 com/contextslice/agent/ShutdownHookTest.class
+com/contextslice/agent/ParameterSerializerTest$Inner.class
+com/contextslice/agent/ParameterSerializerTest$SelfRef.class
+com/contextslice/agent/AgentBootstrapTest.class
+com/contextslice/agent/ParameterSerializerTest.class
+com/contextslice/agent/ParameterSerializerTest$Outer.class
+com/contextslice/agent/TransformRecordTest.class
 com/contextslice/agent/RuntimeTracerTest.class

@@ -15,6 +15,10 @@ public class StripeOrderService implements OrderService {
     @Override
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
+        // Mutate request in-place so transform capture shows orderId/status going from null → value
+        request.setOrderId(UUID.randomUUID().toString());
+        request.setStatus("PROCESSING");
+
         PaymentRequest paymentRequest = new PaymentRequest(
             request.getCustomerId(),
             request.getAmount(),
@@ -24,7 +28,6 @@ public class StripeOrderService implements OrderService {
         if (!result.isSuccess()) {
             throw new RuntimeException("Payment failed: " + result.getErrorMessage());
         }
-        String orderId = UUID.randomUUID().toString();
-        return new OrderResponse(orderId, "CONFIRMED", result.getTransactionId());
+        return new OrderResponse(request.getOrderId(), "CONFIRMED", result.getTransactionId());
     }
 }

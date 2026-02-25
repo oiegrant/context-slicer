@@ -41,6 +41,18 @@ public class ManifestConfig {
     @SerializedName("namespace")
     private String namespace;
 
+    /** Whether data transform capture is enabled (default: true). */
+    @SerializedName("transforms_enabled")
+    private Boolean transformsEnabled;
+
+    /** Serialization depth limit for transform capture (default: 2). */
+    @SerializedName("transform_depth")
+    private Integer transformDepth;
+
+    /** Max collection elements to serialize in transform capture (default: 3). */
+    @SerializedName("transform_max_collection_elements")
+    private Integer transformMaxCollectionElements;
+
     public String getScenarioName() { return scenarioName; }
     public List<String> getEntryPoints() { return entryPoints != null ? entryPoints : Collections.emptyList(); }
     public List<String> getRunArgs()     { return runArgs     != null ? runArgs     : Collections.emptyList(); }
@@ -49,4 +61,9 @@ public class ManifestConfig {
     public String getRunScript()         { return runScript; }
     public int getServerPort()           { return serverPort != null ? serverPort : 8080; }
     public String getNamespace()         { return namespace != null ? namespace : "com."; }
+    public boolean isTransformsEnabled() { return transformsEnabled == null || transformsEnabled; }
+    public int getTransformDepth()       { return transformDepth != null ? transformDepth : 2; }
+    public int getTransformMaxCollectionElements() {
+        return transformMaxCollectionElements != null ? transformMaxCollectionElements : 3;
+    }
 }

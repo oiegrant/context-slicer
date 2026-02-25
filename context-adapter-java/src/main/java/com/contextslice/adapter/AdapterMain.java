@@ -101,6 +101,9 @@ public class AdapterMain {
 
         // 4. Launch with agent
         System.err.println("[context-adapter] Launching with agent for runtime trace...");
+        System.err.println("[context-adapter] transforms=" + config.isTransformsEnabled()
+                + " depth=" + config.getTransformDepth()
+                + " max_elements=" + config.getTransformMaxCollectionElements());
         RuntimeTrace runtimeTrace = new AgentLauncher().launch(
                 agent,
                 appJar,
@@ -108,7 +111,10 @@ public class AdapterMain {
                 resolvedNamespace,
                 config.getRunArgs().isEmpty() ? Collections.emptyList() : config.getRunArgs(),
                 config.getRunScript(),
-                config.getServerPort()
+                config.getServerPort(),
+                config.isTransformsEnabled(),
+                config.getTransformDepth(),
+                config.getTransformMaxCollectionElements()
         );
         System.err.println("[context-adapter] Runtime trace complete: "
                 + runtimeTrace.getObservedSymbols().size() + " observed symbols");

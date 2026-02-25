@@ -30,19 +30,18 @@ pub fn write(
     try writer.print("# Architecture: {s}\n\n", .{scenario_name});
     try writer.writeAll("## Call Path\n\n");
 
-    for (slice.ordered_symbols, 1..) |sym, i| {
+    for (slice.ordered_symbols, 0..) |sym, idx| {
+        const i = idx + 1;
         // Display name: last two components of ID (ClassName::method)
         const display = displayName(sym.id);
-        // Find file path (it's in relevant_file_paths only if the symbol has a file)
-        // We derive file info from the symbol's annotations and kind
-        const kind_str: []const u8 = switch (sym.kind) {
-            .class => "class",
-            .interface => "interface",
-            .method => "method",
-            .constructor => "constructor",
-        };
-        _ = kind_str;
         try writer.print("{d}. `{s}`\n", .{ i, display });
+
+        // Render transform annotations if present
+        if (idx < slice.transforms.len) {
+            if (slice.transforms[idx]) |mt| {
+                try renderTransforms(writer, allocator, mt);
+            }
+        }
     }
 
     if (slice.relevant_file_paths.len > 0) {
@@ -57,6 +56,47 @@ pub fn write(
 
     try util_fs.createDirIfAbsent(output_dir);
     try util_fs.writeFile(out_path, buf.items);
+}
+
+/// Renders transform annotations for one method into the markdown writer.
+///
+/// Example output:
+///   - *Transforms:*
+///     - `request` (OrderRequest): mutates → `orderId` (null → "ord-456"), `status` (null → "PROCESSING")
+///   - *Returns:* `OrderResponse{orderId=ord-456, status=CONFIRMED}`
+fn renderTransforms(
+    writer: anytype,
+    allocator: std.mem.Allocator,
+    mt: types.MethodTransform,
+) !void {
+    _ = allocator; // reserved for future use
+
+    var any_mutation = false;
+    for (mt.parameters) |param| {
+        if (param.mutated) {
+            any_mutation = true;
+            break;
+        }
+    }
+
+    if (any_mutation) {
+        try writer.writeAll("   - *Transforms:*\n");
+        for (mt.parameters) |param| {
+            if (!param.mutated) continue;
+            try writer.print("     - `{s}` ({s}): mutates →", .{ param.name, param.type_name });
+            for (param.changed_fields) |diff| {
+                try writer.print(" `{s}` (\"{s}\" → \"{s}\")", .{ diff.field, diff.before, diff.after });
+            }
+            try writer.writeByte('\n');
+        }
+    }
+
+    if (mt.return_value) |rv| {
+        const rt = mt.return_type orelse "?";
+        if (!std.mem.eql(u8, rt, "void")) {
+            try writer.print("   - *Returns:* `{s}`\n", .{rv});
+        }
+    }
 }
 
 /// Extract a human-readable display name from a symbol ID like
@@ -110,6 +150,7 @@ test "write produces architecture.md" {
         .ordered_symbols = @constCast(&syms),
         .relevant_file_paths = @constCast(&[_][]const u8{ "src/OrderController.java", "src/StripeOrderService.java" }),
         .call_graph_edges = &[_]@import("../compression/filter.zig").FilteredEdge{},
+        .transforms = &[_]?types.MethodTransform{},
         ._alloc = std.testing.allocator,
     };
 
@@ -136,6 +177,7 @@ test "architecture.md starts with # Architecture: header" {
         .ordered_symbols = @constCast(&syms),
         .relevant_file_paths = &[_][]const u8{},
         .call_graph_edges = &[_]@import("../compression/filter.zig").FilteredEdge{},
+        .transforms = &[_]?types.MethodTransform{},
         ._alloc = std.testing.allocator,
     };
 
@@ -162,6 +204,7 @@ test "StripeOrderService.createOrder appears in architecture.md" {
         .ordered_symbols = @constCast(&syms),
         .relevant_file_paths = &[_][]const u8{},
         .call_graph_edges = &[_]@import("../compression/filter.zig").FilteredEdge{},
+        .transforms = &[_]?types.MethodTransform{},
         ._alloc = std.testing.allocator,
     };
 
@@ -173,4 +216,104 @@ test "StripeOrderService.createOrder appears in architecture.md" {
     defer std.testing.allocator.free(content);
 
     try std.testing.expect(std.mem.indexOf(u8, content, "StripeOrderService") != null);
+}
+
+test "symbol with no transform produces no annotations" {
+    const tmp = std.testing.tmpDir(.{});
+    defer @constCast(&tmp).cleanup();
+    var path_buf: [std.fs.max_path_bytes]u8 = undefined;
+    const tmp_path = try tmp.dir.realpath(".", &path_buf);
+
+    const syms = [_]types.Symbol{makeSymbol("java::com.example.Foo::bar()", .method)};
+    const no_transforms = [_]?types.MethodTransform{null};
+    const slice = compressor.Slice{
+        .ordered_symbols = @constCast(&syms),
+        .relevant_file_paths = &[_][]const u8{},
+        .call_graph_edges = &[_]@import("../compression/filter.zig").FilteredEdge{},
+        .transforms = @constCast(&no_transforms),
+        ._alloc = std.testing.allocator,
+    };
+    try write(slice, "test", tmp_path, std.testing.allocator);
+    const out_path = try std.fmt.allocPrint(std.testing.allocator, "{s}/architecture.md", .{tmp_path});
+    defer std.testing.allocator.free(out_path);
+    const content = try std.fs.cwd().readFileAlloc(std.testing.allocator, out_path, 1024 * 1024);
+    defer std.testing.allocator.free(content);
+    try std.testing.expect(std.mem.indexOf(u8, content, "Transforms") == null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "Returns") == null);
+}
+
+test "symbol with mutating parameter produces Transforms block" {
+    const tmp = std.testing.tmpDir(.{});
+    defer @constCast(&tmp).cleanup();
+    var path_buf: [std.fs.max_path_bytes]u8 = undefined;
+    const tmp_path = try tmp.dir.realpath(".", &path_buf);
+
+    const diff = types.FieldDiff{ .field = "orderId", .before = "null", .after = "ord-456" };
+    const param = types.ParameterTransform{
+        .name = "request",
+        .type_name = "OrderRequest",
+        .mutated = true,
+        .changed_fields = &[_]types.FieldDiff{diff},
+    };
+    const mt = types.MethodTransform{
+        .symbol_id = "java::com.example.Foo::bar(OrderRequest)",
+        .parameters = &[_]types.ParameterTransform{param},
+        .return_value = "OrderResponse{orderId=ord-456}",
+        .return_type = "OrderResponse",
+    };
+    const syms = [_]types.Symbol{makeSymbol("java::com.example.Foo::bar(OrderRequest)", .method)};
+    const transforms_arr = [_]?types.MethodTransform{mt};
+    const slice = compressor.Slice{
+        .ordered_symbols = @constCast(&syms),
+        .relevant_file_paths = &[_][]const u8{},
+        .call_graph_edges = &[_]@import("../compression/filter.zig").FilteredEdge{},
+        .transforms = @constCast(&transforms_arr),
+        ._alloc = std.testing.allocator,
+    };
+    try write(slice, "test", tmp_path, std.testing.allocator);
+    const out_path = try std.fmt.allocPrint(std.testing.allocator, "{s}/architecture.md", .{tmp_path});
+    defer std.testing.allocator.free(out_path);
+    const content = try std.fs.cwd().readFileAlloc(std.testing.allocator, out_path, 1024 * 1024);
+    defer std.testing.allocator.free(content);
+    try std.testing.expect(std.mem.indexOf(u8, content, "Transforms") != null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "orderId") != null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "Returns") != null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "ord-456") != null);
+}
+
+test "void return type produces no Returns line" {
+    const tmp = std.testing.tmpDir(.{});
+    defer @constCast(&tmp).cleanup();
+    var path_buf: [std.fs.max_path_bytes]u8 = undefined;
+    const tmp_path = try tmp.dir.realpath(".", &path_buf);
+
+    const diff = types.FieldDiff{ .field = "status", .before = "null", .after = "DONE" };
+    const param = types.ParameterTransform{
+        .name = "req",
+        .type_name = "Req",
+        .mutated = true,
+        .changed_fields = &[_]types.FieldDiff{diff},
+    };
+    const mt = types.MethodTransform{
+        .symbol_id = "java::Foo::doWork()",
+        .parameters = &[_]types.ParameterTransform{param},
+        .return_value = null,
+        .return_type = "void",
+    };
+    const syms = [_]types.Symbol{makeSymbol("java::Foo::doWork()", .method)};
+    const transforms_arr = [_]?types.MethodTransform{mt};
+    const slice = compressor.Slice{
+        .ordered_symbols = @constCast(&syms),
+        .relevant_file_paths = &[_][]const u8{},
+        .call_graph_edges = &[_]@import("../compression/filter.zig").FilteredEdge{},
+        .transforms = @constCast(&transforms_arr),
+        ._alloc = std.testing.allocator,
+    };
+    try write(slice, "test", tmp_path, std.testing.allocator);
+    const out_path = try std.fmt.allocPrint(std.testing.allocator, "{s}/architecture.md", .{tmp_path});
+    defer std.testing.allocator.free(out_path);
+    const content = try std.fs.cwd().readFileAlloc(std.testing.allocator, out_path, 1024 * 1024);
+    defer std.testing.allocator.free(content);
+    try std.testing.expect(std.mem.indexOf(u8, content, "Returns") == null);
+    try std.testing.expect(std.mem.indexOf(u8, content, "Transforms") != null);
 }

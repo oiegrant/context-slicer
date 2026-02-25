@@ -14,7 +14,7 @@ pub const MergedEdge = struct {
 /// Result of merging static (ValidatedIr) with runtime (RuntimeTrace).
 /// String fields point into the source arenas — keep Parsed(IrRoot) and
 /// Parsed(RuntimeTrace) alive for the lifetime of MergedIr.
-/// Call deinit() to free the merged slices.
+/// Call deinit() to free the merged slices and transforms map.
 pub const MergedIr = struct {
     symbols: []types.Symbol,
     call_edges: []MergedEdge,
@@ -25,11 +25,14 @@ pub const MergedIr = struct {
     build_id: []const u8,
     adapter_version: []const u8,
     scenario: types.Scenario,
+    /// symbol_id → MethodTransform mapping (from runtime_trace method_transforms)
+    transforms: std.StringHashMap(types.MethodTransform),
     _alloc: std.mem.Allocator,
 
-    pub fn deinit(self: MergedIr) void {
+    pub fn deinit(self: *MergedIr) void {
         self._alloc.free(self.symbols);
         self._alloc.free(self.call_edges);
+        self.transforms.deinit();
     }
 };
 
@@ -111,6 +114,13 @@ pub fn merge(
         });
     }
 
+    // Build transforms map: symbol_id → MethodTransform
+    var transforms = std.StringHashMap(types.MethodTransform).init(allocator);
+    errdefer transforms.deinit();
+    for (runtime.method_transforms) |mt| {
+        try transforms.put(mt.symbol_id, mt);
+    }
+
     return MergedIr{
         .symbols = try symbols.toOwnedSlice(allocator),
         .call_edges = try edges.toOwnedSlice(allocator),
@@ -121,6 +131,7 @@ pub fn merge(
         .build_id = static_ir.build_id,
         .adapter_version = static_ir.adapter_version,
         .scenario = static_ir.scenario,
+        .transforms = transforms,
         ._alloc = allocator,
     };
 }

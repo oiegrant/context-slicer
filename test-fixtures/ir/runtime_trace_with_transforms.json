@@ -1,0 +1,44 @@
+{
+  "observed_symbols": [
+    { "symbol_id": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)", "call_count": 1 },
+    { "symbol_id": "java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)", "call_count": 1 }
+  ],
+  "observed_edges": [
+    {
+      "caller": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)",
+      "callee": "java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)",
+      "call_count": 1
+    }
+  ],
+  "method_transforms": [
+    {
+      "symbol_id": "java::com.contextslice.fixture.StripeOrderService::createOrder(OrderRequest)",
+      "parameters": [
+        {
+          "name": "request",
+          "type_name": "OrderRequest",
+          "mutated": true,
+          "changed_fields": [
+            { "field": "orderId", "before": "null", "after": "ord-abc123" },
+            { "field": "status",  "before": "null", "after": "PROCESSING" }
+          ]
+        }
+      ],
+      "return_value": "OrderResponse{orderId=ord-abc123, status=CONFIRMED, paymentRef=stripe-txn-001}",
+      "return_type": "OrderResponse"
+    },
+    {
+      "symbol_id": "java::com.contextslice.fixture.StripePaymentService::charge(PaymentRequest)",
+      "parameters": [
+        {
+          "name": "arg0",
+          "type_name": "PaymentRequest",
+          "mutated": false,
+          "changed_fields": []
+        }
+      ],
+      "return_value": "PaymentResult{success=true, transactionId=stripe-txn-001, chargeId=ch_001, errorMessage=null}",
+      "return_type": "PaymentResult"
+    }
+  ]
+}

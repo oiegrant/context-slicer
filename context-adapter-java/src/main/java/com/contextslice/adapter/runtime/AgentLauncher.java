@@ -34,9 +34,10 @@ public class AgentLauncher {
 
     /**
      * Launch the app in CLI mode (app must exit on its own).
+     * Uses default transform config (enabled, depth=2, max_elements=3).
      */
     public RuntimeTrace launch(Path agentJar, Path appJar, Path outputDir, String namespace, List<String> runArgs) {
-        return launch(agentJar, appJar, outputDir, namespace, runArgs, null, 8080);
+        return launch(agentJar, appJar, outputDir, namespace, runArgs, null, 8080, true, 2, 3);
     }
 
     /**
@@ -50,6 +51,18 @@ public class AgentLauncher {
             String namespace, List<String> runArgs,
             String runScript, int serverPort
     ) {
+        return launch(agentJar, appJar, outputDir, namespace, runArgs, runScript, serverPort, true, 2, 3);
+    }
+
+    /**
+     * Launch the app with full transform config.
+     */
+    public RuntimeTrace launch(
+            Path agentJar, Path appJar, Path outputDir,
+            String namespace, List<String> runArgs,
+            String runScript, int serverPort,
+            boolean transformsEnabled, int transformDepth, int transformMaxElements
+    ) {
         try {
             Files.createDirectories(outputDir);
         } catch (IOException e) {
@@ -60,7 +73,10 @@ public class AgentLauncher {
         String javaExe = (javaHome != null) ? javaHome + "/bin/java" : "java";
 
         String agentArg = agentJar.toAbsolutePath() + "=output=" + outputDir.toAbsolutePath()
-                + ",namespace=" + namespace;
+                + ",namespace=" + namespace
+                + ",transforms=" + (transformsEnabled ? "true" : "false")
+                + ",depth=" + transformDepth
+                + ",max_elements=" + transformMaxElements;
 
         List<String> command = new ArrayList<>();
         command.add(javaExe);

@@ -4,6 +4,7 @@ const manifest_mod = @import("manifest.zig");
 const subprocess = @import("subprocess.zig");
 const util_fs = @import("../util/fs.zig");
 const RecordArgs = @import("../cli/commands/record.zig").RecordArgs;
+const config_mod = @import("../cli/config.zig");
 
 const embedded_jars = @import("embedded_jars");
 
@@ -70,12 +71,7 @@ pub fn run(
 
     const existing = if (existing_parsed) |*p| &p.value else null;
 
-    // CLI overrides: config_files and run_args only override if explicitly provided.
-    const config_files: []const []const u8 = if (args.config_file) |cf|
-        &[_][]const u8{cf}
-    else if (existing) |e| e.config_files
-    else
-        &.{};
+    const config_files: []const []const u8 = if (existing) |e| e.config_files else &.{};
 
     const run_args: []const []const u8 = if (args.run_args.len > 0)
         args.run_args
@@ -91,6 +87,9 @@ pub fn run(
     const run_script: ?[]const u8 = args.run_script orelse
         if (existing) |e| e.run_script else null;
 
+    // --- Load transform config from context-slice.json (defaults if absent) ---
+    const ctx_config = try config_mod.loadConfig(project_root, allocator);
+
     // --- Write manifest to project root (adapter uses parent dir of manifest as project root) ---
     const m = manifest_mod.Manifest{
         .scenario_name = args.scenario_name,
@@ -101,6 +100,9 @@ pub fn run(
         .namespace = namespace,
         .server_port = server_port,
         .run_script = run_script,
+        .transforms_enabled = args.transforms_enabled,
+        .transform_depth = ctx_config.transforms.depth_limit,
+        .transform_max_collection_elements = ctx_config.transforms.max_collection_elements,
     };
     try manifest_mod.write(m, project_root, allocator);
 
@@ -195,7 +197,6 @@ test "orchestrator: unknown language returns error" {
     // No build files → language = .unknown
     const args = RecordArgs{
         .scenario_name = "test",
-        .config_file = null,
         .run_args = &.{},
         .run_script = null,
         .namespace = null,
@@ -204,6 +205,40 @@ test "orchestrator: unknown language returns error" {
 
     const result = run(args, tmp_path, std.testing.allocator);
     try std.testing.expectError(error.UnsupportedLanguage, result);
+}
+
+test "orchestrator: run writes transforms_enabled from RecordArgs into manifest" {
+    const tmp = std.testing.tmpDir(.{});
+    defer @constCast(&tmp).cleanup();
+
+    var path_buf: [std.fs.max_path_bytes]u8 = undefined;
+    const tmp_path = try tmp.dir.realpath(".", &path_buf);
+
+    // Write a pom.xml so language detection succeeds (Java)
+    const pom_path = try std.fmt.allocPrint(std.testing.allocator, "{s}/pom.xml", .{tmp_path});
+    defer std.testing.allocator.free(pom_path);
+    const pom = try std.fs.createFileAbsolute(pom_path, .{});
+    defer pom.close();
+    try pom.writeAll("<project/>");
+
+    const args = RecordArgs{
+        .scenario_name = "test",
+        .run_args = &.{},
+        .run_script = null,
+        .namespace = null,
+        .server_port = null,
+        .transforms_enabled = false,
+    };
+
+    // run() will fail (AdapterFailed) since there's no real adapter, but it writes the manifest first
+    _ = run(args, tmp_path, std.testing.allocator) catch {};
+
+    var parsed = try manifest_mod.readIfExists(tmp_path, std.testing.allocator);
+    defer if (parsed) |*p| p.deinit();
+
+    if (parsed) |p| {
+        try std.testing.expect(!p.value.transforms_enabled);
+    }
 }
 
 test "orchestrator: buildAdapterCommand produces expected argv" {
